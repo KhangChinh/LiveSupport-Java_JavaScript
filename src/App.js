@@ -1,25 +1,38 @@
-import logo from './logo.svg';
-import './App.css';
+// File: src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import CreateTicket from './pages/CreateTicket';
+import TicketList from './pages/TicketList';
+import StaffTicketList from './pages/StaffTicketList';
+import ChatRoom from './pages/ChatRoom';
+import History from './pages/History';
+import AdminUsers from './pages/AdminUsers';
+import Navbar from './components/Navbar';
+import { useSelector } from 'react-redux';
 
-function App() {
+const App = () => {
+  const user = useSelector((state) => state.user);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/tickets/create" element={user && user.roleID === 1 ? <CreateTicket /> : <Navigate to="/dashboard" />} />
+        <Route path="/tickets/my" element={user && user.roleID === 1 ? <TicketList /> : <Navigate to="/dashboard" />} />
+        <Route path="/tickets/staff" element={user && [2, 3].includes(user.roleID) ? <StaffTicketList /> : <Navigate to="/dashboard" />} />
+        <Route path="/chat/:roomId" element={user ? <ChatRoom /> : <Navigate to="/login" />} />
+        <Route path="/history" element={user ? <History /> : <Navigate to="/login" />} />
+        <Route path="/admin/users" element={user && user.roleID === 2 ? <AdminUsers /> : <Navigate to="/dashboard" />} />
+        <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;

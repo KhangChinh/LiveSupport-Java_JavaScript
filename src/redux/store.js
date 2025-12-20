@@ -1,0 +1,27 @@
+// File: src/redux/store.js
+import { createStore } from 'redux';
+
+const initialState = {
+    user: JSON.parse(localStorage.getItem('user')) || null,
+    sessionId: localStorage.getItem('sessionId') || null,
+    notifications: [],
+};
+
+function rootReducer(state = initialState, action) {
+    switch (action.type) {
+        case 'LOGIN':
+            return { ...state, user: action.payload.user, sessionId: action.payload.sessionId };
+        case 'LOGOUT':
+            return { ...state, user: null, sessionId: null, notifications: [] };
+        case 'UPDATE_NOTIFICATIONS':
+            return { ...state, notifications: action.payload };
+        case 'ADD_NOTIFICATION':
+            return { ...state, notifications: [action.payload, ...state.notifications] };
+        default:
+            return state;
+    }
+}
+
+const store = createStore(rootReducer);
+
+export default store;
