@@ -1,0 +1,366 @@
+/* File: src/pages/Auth.scss (copied and adjusted from sample) */
+.auth-background {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    #f5f7fa,
+    #e0e7ef
+  ); /* Gradient nền nhẹ để không đơn điệu */
+
+  font-family: "Roboto", sans-serif;
+}
+
+.login-container {
+  position: relative;
+  width: 1350px; /* Tăng từ 800px để form lớn hơn, tạo không gian */
+  min-height: 500px;
+  background: #ffffff;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.login-container:hover {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.login-form-container {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  padding: 50px; /* Tăng từ 40px để form thoáng hơn */
+  box-sizing: border-box;
+  transition: all 0.6s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sign-in-container {
+  left: 0;
+  z-index: 2;
+  opacity: 1; /* Thêm explicit opacity ban đầu */
+}
+
+.sign-up-container {
+  left: 0;
+  opacity: 0;
+  z-index: 1;
+}
+
+.login-container.right-panel-active .sign-in-container {
+  transform: translateX(100%);
+  opacity: 0; /* Thêm để ẩn form đăng nhập khi toggle, tránh đè lên */
+  z-index: 1; /* Giảm z-index để form đăng ký ở trên */
+}
+
+.login-container.right-panel-active .sign-up-container {
+  transform: translateX(100%);
+  opacity: 1;
+  z-index: 5;
+}
+
+.overlay-container {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.6s ease-in-out;
+  z-index: 100;
+}
+
+.login-container.right-panel-active .overlay-container {
+  transform: translateX(-100%);
+}
+
+.overlay {
+  background: linear-gradient(
+    to right,
+    #706464,
+    #9e7e7e
+  ); /* Gradient nhẹ nhàng từ #706464 đến tông sáng hơn, cute và hợp cho thú cưng */
+  color: #ffffff;
+  position: relative;
+  left: -100%;
+  height: 100%;
+  width: 200%;
+  transform: translateX(0) skew(-20deg); /* Skew để tạo hình xéo */
+  transition: transform 0.6s ease-in-out;
+}
+
+.login-container.right-panel-active .overlay {
+  transform: translateX(50%) skew(-20deg);
+}
+
+.overlay-panel {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 40px;
+  text-align: center;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  transform: translateX(0) skew(20deg); /* Counter skew cho nội dung */
+  transition: transform 0.6s ease-in-out;
+}
+
+.overlay-left {
+  transform: translateX(-20%) skew(20deg);
+
+  .p-address {
+    margin-top: 10rem;
+  }
+}
+
+.login-container.right-panel-active .overlay-left {
+  transform: translateX(0) skew(20deg);
+}
+
+.overlay-right {
+  right: 0;
+  transform: translateX(0) skew(20deg);
+
+  .p-address {
+    margin-top: 8rem;
+  }
+}
+
+.login-container.right-panel-active .overlay-right {
+  transform: translateX(20%) skew(20deg);
+}
+
+.ghost {
+  background: transparent;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+}
+
+.ghost:hover {
+  background: #ffffff;
+  color: #706464;
+  transform: translateY(-2px);
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 25px; /* Tăng margin để title cách xa input hơn */
+  color: #333333;
+  text-align: center;
+}
+
+.text-login {
+  font-size: 28px;
+  margin-bottom: 25px; /* Tăng margin */
+  color: #333333;
+  text-align: center;
+}
+
+.logo-img {
+  margin: 0 auto;
+  display: block;
+  max-width: 18rem;
+  margin-bottom: 3rem;
+  margin-top: -2rem;
+}
+
+.text-register {
+  margin-top: 1rem;
+  font-size: 28px;
+  margin-bottom: 25px; /* Tăng margin */
+  color: #333333;
+  text-align: center;
+}
+
+.inputbox-login {
+  position: relative;
+  margin-bottom: 15px; /* Giảm từ 20px để input nhỏ gọn hơn, nhưng vẫn có khoảng cách */
+}
+
+.inputbox-login input {
+  width: 100%;
+  padding: 10px 35px; /* Giảm padding để input nhỏ hơn, tránh dính */
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.inputbox-login input:focus {
+  border-color: #706464;
+  outline: none;
+}
+
+.inputbox-login label {
+  position: absolute;
+  top: 50%;
+  left: 35px; /* Điều chỉnh theo padding mới */
+  transform: translateY(-50%);
+  color: #999999;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.inputbox-login input:not(:placeholder-shown) + label,
+.inputbox-login input:focus + label {
+  top: -10px;
+  left: 10px;
+  font-size: 12px;
+  color: #706464;
+  background: #ffffff;
+  padding: 0 5px;
+}
+
+.inputbox-login ion-icon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: #999999;
+  font-size: 20px;
+}
+
+.toggle-password-login {
+  position: absolute;
+  top: 50%;
+  right: 2.3rem;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #999999;
+  font-size: 20px;
+}
+
+.toggle-password-login:hover {
+  color: #706464;
+}
+
+.password-util {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px; /* Giảm để khớp với input */
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  color: #666666;
+}
+
+.remember-me input {
+  margin-right: 8px;
+}
+
+.forgot-password {
+  color: #706464;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.login-button,
+.register-button {
+  width: 100%;
+  padding: 0px;
+  background: #706464;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  margin-top: 10px; /* Thêm margin để cách cách input cuối */
+  p {
+    margin: 0.5rem 0;
+  }
+}
+
+.login-button:hover,
+.register-button:hover {
+  transform: translateY(-2px);
+}
+
+.R1 {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px; /* Thêm gap để các input ngang hàng không dính sát */
+}
+
+.R1 > div {
+  width: 48%;
+}
+
+.selectbox-login {
+  position: relative;
+  margin-bottom: 15px; /* Giảm để khớp */
+}
+
+.selectbox-login select {
+  width: 100%;
+  padding: 10px 35px; /* Giảm padding như input */
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  font-size: 16px;
+  appearance: none;
+  transition: border-color 0.3s ease;
+}
+
+.selectbox-login select:focus {
+  border-color: #706464;
+  outline: none;
+}
+
+.selectbox-login ion-icon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: #999999;
+  font-size: 20px;
+}
+
+/* CHỈNH SỬA CHÍNH: Vị trí home-button đối xứng */
+
+.text-danger {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* Thêm media query để responsive nếu form vẫn chật trên mobile */
+// @media (max-width: 900px) {
+//   .container {
+//     width: 100%;
+//     max-width: 700px;
+//   }
+//   .R1 {
+//     flex-direction: column;
+//     gap: 10px;
+//   }
+//   .R1 > div {
+//     width: 100%;
+//   }
+
+//   /* Trên mobile, home-button luôn ở trái để dễ chạm */
+//   .sign-up-container .home-button {
+//     right: auto;
+//     left: 20px;
+//   }
+// }

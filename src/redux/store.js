@@ -1,25 +1,38 @@
 // File: src/redux/store.js
-import { createStore } from 'redux';
+import { createStore } from "redux";
 
 const initialState = {
-    user: JSON.parse(localStorage.getItem('user')) || null,
-    sessionId: localStorage.getItem('sessionId') || null,
-    notifications: [],
+  user: JSON.parse(localStorage.getItem("user")) || null,
+  sessionId: localStorage.getItem("sessionId") || null,
+  notifications: [],
 };
 
 function rootReducer(state = initialState, action) {
-    switch (action.type) {
-        case 'LOGIN':
-            return { ...state, user: action.payload.user, sessionId: action.payload.sessionId };
-        case 'LOGOUT':
-            return { ...state, user: null, sessionId: null, notifications: [] };
-        case 'UPDATE_NOTIFICATIONS':
-            return { ...state, notifications: action.payload };
-        case 'ADD_NOTIFICATION':
-            return { ...state, notifications: [action.payload, ...state.notifications] };
-        default:
-            return state;
-    }
+  switch (action.type) {
+    case "LOGIN":
+      // Lưu vào localStorage để đồng bộ
+      localStorage.setItem("user", JSON.stringify(action.payload.user));
+      localStorage.setItem("sessionId", action.payload.sessionId);
+      return {
+        ...state,
+        user: action.payload.user,
+        sessionId: action.payload.sessionId,
+      };
+    case "LOGOUT":
+      // Xóa localStorage khi logout
+      localStorage.removeItem("user");
+      localStorage.removeItem("sessionId");
+      return { ...state, user: null, sessionId: null, notifications: [] };
+    case "UPDATE_NOTIFICATIONS":
+      return { ...state, notifications: action.payload };
+    case "ADD_NOTIFICATION":
+      return {
+        ...state,
+        notifications: [action.payload, ...state.notifications],
+      };
+    default:
+      return state;
+  }
 }
 
 const store = createStore(rootReducer);
