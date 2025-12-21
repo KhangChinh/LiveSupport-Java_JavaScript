@@ -35,7 +35,7 @@ const TicketList = () => {
     return (
         <div className="container mt-5">
             <h2>Ticket của tôi</h2>
-            <input className="form-control mb-3" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm kiếm" />
+            <input className="form-control mb-3" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm kiếm(tên phòng)" />
             <select className="form-control mb-3" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                 <option value="">Tất cả</option>
                 <option value="1">Pending</option>

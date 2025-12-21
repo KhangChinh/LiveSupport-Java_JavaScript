@@ -29,6 +29,8 @@ const Navbar = () => {
         dispatch({ type: 'LOGOUT' });
         localStorage.removeItem('user');
         localStorage.removeItem('sessionId');
+        socket.disconnect();
+        socket.connect();
     };
 
     const handleShowNotifications = () => {

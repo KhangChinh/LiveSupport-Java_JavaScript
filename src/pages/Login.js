@@ -24,19 +24,6 @@ const Login = () => {
         const sessionId = localStorage.getItem('sessionId');
         if (sessionId) {
             socket.emit('auth', sessionId);
-            socket.on('authSuccess', (user, sessionId) => {
-                console.log('Auth success', user);
-                dispatch({ type: 'LOGIN', payload: { user, sessionId } });
-                localStorage.setItem('sessionId', sessionId);
-                localStorage.setItem('user', JSON.stringify(user));
-                navigate('/dashboard');
-            });
-            socket.on('authError', (msg) => {
-                console.log('Auth error', msg);
-                localStorage.removeItem('sessionId');
-                localStorage.removeItem('user');
-                enqueueSnackbar(msg, { variant: 'error' });
-            });
         }
         if (user) navigate('/dashboard');
     }, [user, navigate, enqueueSnackbar]);

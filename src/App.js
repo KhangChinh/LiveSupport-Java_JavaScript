@@ -1,6 +1,7 @@
 // File: src/App.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -11,10 +12,19 @@ import ChatRoom from './pages/ChatRoom';
 import History from './pages/History';
 import AdminUsers from './pages/AdminUsers';
 import Navbar from './components/Navbar';
-import { useSelector } from 'react-redux';
+import socket from './services/SocketService';
 
 const App = () => {
   const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId && !socket.connected) {
+      socket.connect(); 
+    }
+ 
+  }, [dispatch]);
 
   return (
     <Router>

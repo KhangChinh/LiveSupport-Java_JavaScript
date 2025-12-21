@@ -5,6 +5,7 @@ const initialState = {
     user: JSON.parse(localStorage.getItem('user')) || null,
     sessionId: localStorage.getItem('sessionId') || null,
     notifications: [],
+    authLoading: !!localStorage.getItem('sessionId'),
 };
 
 function rootReducer(state = initialState, action) {
@@ -13,6 +14,10 @@ function rootReducer(state = initialState, action) {
             return { ...state, user: action.payload.user, sessionId: action.payload.sessionId };
         case 'LOGOUT':
             return { ...state, user: null, sessionId: null, notifications: [] };
+        case 'AUTH_START':
+            return { ...state, authLoading: true };
+        case 'AUTH_ERROR': 
+            return { ...state, authLoading: false };
         case 'UPDATE_NOTIFICATIONS':
             return { ...state, notifications: action.payload };
         case 'ADD_NOTIFICATION':
