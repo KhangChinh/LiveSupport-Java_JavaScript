@@ -1,5 +1,4 @@
 package com.livechat.service;
-
 import com.livechat.model.Ticket;
 import com.livechat.DatabaseManager;
 import java.sql.Connection;
@@ -10,9 +9,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-
 public class TicketService {
-
     public Ticket createTicket(Ticket ticket) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
@@ -47,7 +44,6 @@ public class TicketService {
         }
         return null;
     }
-
     public List<Ticket> getMyTickets(int accountID, int roleID, String filterStatus, String search, String sort, int page, int limit) {
         List<Ticket> tickets = new ArrayList<>();
         Connection conn = DatabaseManager.getConnection();
@@ -62,10 +58,10 @@ public class TicketService {
                 } else { // Staff/Admin
                     sql.append("(t.RoleID = ? AND t.TicketStatusID = 1) OR t.StaffID = ?");
                 }
-                if (filterStatus != null) {
+                if (filterStatus != null && !filterStatus.trim().isEmpty()) {
                     sql.append(" AND t.TicketStatusID = ?");
                 }
-                if (search != null) {
+                if (search != null && !search.trim().isEmpty()) {
                     sql.append(" AND (t.TicketDescription LIKE ? OR c.AccountName LIKE ?)");
                 }
                 sql.append(" ORDER BY ").append(sort != null ? sort : "t.CreatedAt DESC");
@@ -78,10 +74,10 @@ public class TicketService {
                     pstmt.setInt(paramIndex++, roleID);
                     pstmt.setInt(paramIndex++, accountID);
                 }
-                if (filterStatus != null) {
+                if (filterStatus != null && !filterStatus.trim().isEmpty()) {
                     pstmt.setInt(paramIndex++, Integer.parseInt(filterStatus));
                 }
-                if (search != null) {
+                if (search != null && !search.trim().isEmpty()) {
                     pstmt.setString(paramIndex++, "%" + search + "%");
                     pstmt.setString(paramIndex++, "%" + search + "%");
                 }
@@ -115,7 +111,6 @@ public class TicketService {
         }
         return tickets;
     }
-
     public int getTicketCount(int accountID, int roleID, String filterStatus, String search) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
@@ -127,10 +122,10 @@ public class TicketService {
                 } else {
                     sql.append("(t.RoleID = ? AND t.TicketStatusID = 1) OR t.StaffID = ?");
                 }
-                if (filterStatus != null) {
+                if (filterStatus != null && !filterStatus.trim().isEmpty()) {
                     sql.append(" AND t.TicketStatusID = ?");
                 }
-                if (search != null) {
+                if (search != null && !search.trim().isEmpty()) {
                     sql.append(" AND (t.TicketDescription LIKE ? OR c.AccountName LIKE ?)");
                 }
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString());
@@ -141,10 +136,10 @@ public class TicketService {
                     pstmt.setInt(paramIndex++, roleID);
                     pstmt.setInt(paramIndex++, accountID);
                 }
-                if (filterStatus != null) {
+                if (filterStatus != null && !filterStatus.trim().isEmpty()) {
                     pstmt.setInt(paramIndex++, Integer.parseInt(filterStatus));
                 }
-                if (search != null) {
+                if (search != null && !search.trim().isEmpty()) {
                     pstmt.setString(paramIndex++, "%" + search + "%");
                     pstmt.setString(paramIndex++, "%" + search + "%");
                 }
@@ -164,7 +159,6 @@ public class TicketService {
         }
         return 0;
     }
-
     public boolean acceptTicket(int ticketID, int staffID) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
@@ -187,7 +181,6 @@ public class TicketService {
         }
         return false;
     }
-
     public boolean rejectTicket(int ticketID) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
@@ -209,7 +202,6 @@ public class TicketService {
         }
         return false;
     }
-
     public boolean transferTicket(int ticketID, int newStaffID) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
@@ -232,7 +224,6 @@ public class TicketService {
         }
         return false;
     }
-
     public boolean endTicket(int ticketID, int ratingPoint, String ratingDescription) {
         if (ratingPoint < 1 || ratingPoint > 5) {
             return false; // Validation
@@ -260,7 +251,6 @@ public class TicketService {
         }
         return false;
     }
-
     public Ticket getTicketById(int ticketID) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {

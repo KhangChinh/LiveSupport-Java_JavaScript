@@ -174,6 +174,7 @@ public class Main {
             if (entry != null) {
                 onlineUsersSet.remove(entry.account.getAccountID());
                 clientAccounts.remove(client.getSessionId());
+                client.sendEvent("logoutSuccess");
             }
             client.disconnect();
         });
@@ -643,6 +644,9 @@ public class Main {
             FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
             HttpUtil.setContentLength(response, fileLength);
             setContentTypeHeader(response, file);
+            response.headers().set("Access-Control-Allow-Origin", "*");
+            response.headers().set("Access-Control-Allow-Methods", "GET, OPTIONS");
+            response.headers().set("Access-Control-Allow-Headers", "Content-Type");
             if (HttpUtil.isKeepAlive(request)) {
                 response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
             }
@@ -682,6 +686,7 @@ public class Main {
         private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
             FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
             response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+            response.headers().set("Access-Control-Allow-Origin", "*");
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         }
 
