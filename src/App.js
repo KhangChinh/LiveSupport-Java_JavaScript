@@ -23,6 +23,14 @@ const App = () => {
   const user = useSelector((state) => state.user);
 
   useEffect(() => {
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId && !socket.connected) {
+      socket.connect(); 
+    }
+ 
+  }, [dispatch]);
+
+  useEffect(() => {
     if (!socket.connected) {
       socket.connect(); // Connect nếu chưa
     }
