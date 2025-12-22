@@ -1,0 +1,44 @@
+.history-list-container {
+    padding: 1rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.sort-select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.room-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.room-table th,
+.room-table td {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.room-table th {
+    background-color: #e9ecef;
+}
+
+.room-row {
+    cursor: pointer;
+}
+
+.room-row:hover {
+    background-color: #f1f3f5;
+}
+
+.room-row.selected {
+    background-color: #e6f3ff;
+    font-weight: 500;
+}

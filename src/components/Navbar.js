@@ -1,4 +1,4 @@
-// File: src/components/Navbar.js
+// src/components/Navbar/Navbar.jsx
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
@@ -6,10 +6,11 @@ import { logout } from "../services/AccountService";
 import { getMyNotifications } from "../services/NotificationService";
 import socket from "../services/SocketService";
 
+import styles from "./Navbar.scss"; // Import SCSS module
+
 const Navbar = () => {
   const user = useSelector((state) => state.user);
   const notifications = useSelector((state) => state.notifications);
-  const sessionId = useSelector((state) => state.sessionId);
   const dispatch = useDispatch();
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -24,7 +25,7 @@ const Navbar = () => {
       });
       return () => socket.off("newNotification");
     }
-  }, [user]);
+  }, [user, dispatch]);
 
   const handleLogout = () => {
     logout();
@@ -33,96 +34,131 @@ const Navbar = () => {
     localStorage.removeItem("sessionId");
   };
 
-  const handleShowNotifications = () => {
-    setShowNotifications(!showNotifications);
+  const toggleNotifications = () => {
+    setShowNotifications((prev) => !prev);
   };
 
   if (!user) return null;
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light">
-      <div className="container-fluid">
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav">
-            <li className="nav-item">
-              <Link className="nav-link" to="/dashboard">
-                Dashboard
-              </Link>
-            </li>
-            {user.roleID === 1 && (
+    <header className="shadow-sm bg-white">
+      <nav className="navbar navbar-expand-lg navbar-light px-3 px-md-4 py-2">
+        <div className="container-fluid">
+          <Link className="navbar-brand fw-bold text-primary" to="/dashboard">
+            Support Center
+          </Link>
+
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <Link className="nav-link" to="/tickets/create">
-                  Tạo Ticket
+                <Link className="nav-link" to="/dashboard">
+                  Dashboard
                 </Link>
               </li>
-            )}
-            <li className="nav-item">
-              <Link
-                className="nav-link"
-                to={user.roleID === 1 ? "/tickets/my" : "/tickets/staff"}
-              >
-                Tickets
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/history">
-                Lịch sử
-              </Link>
-            </li>
-            {user.roleID === 2 && (
-              <li className="nav-item">
-                <Link className="nav-link" to="/admin/users">
-                  Quản lý User
-                </Link>
-              </li>
-            )}
-            <li className="nav-item">
-              <button
-                className="nav-link btn btn-link"
-                onClick={handleShowNotifications}
-              >
-                Thông báo ({notifications.length})
-              </button>
-              {showNotifications && (
-                <div
-                  style={{
-                    position: "absolute",
-                    background: "white",
-                    border: "1px solid #ccc",
-                    padding: "10px",
-                    zIndex: 1000,
-                  }}
-                >
-                  {notifications.map((noti, idx) => (
-                    <div key={idx} style={{ marginBottom: "10px" }}>
-                      {noti.notificationDescription} -{" "}
-                      {new Date(noti.createdAt).toLocaleString()}
-                    </div>
-                  ))}
-                  {notifications.length === 0 && <div>Không có thông báo</div>}
-                </div>
+
+              {user.roleID === 1 && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/tickets/create">
+                    Tạo Ticket
+                  </Link>
+                </li>
               )}
-            </li>
-            <li className="nav-item">
-              <button className="nav-link btn btn-link" onClick={handleLogout}>
-                Logout
-              </button>
-            </li>
-          </ul>
+
+              <li className="nav-item">
+                <Link
+                  className="nav-link"
+                  to={user.roleID === 1 ? "/tickets/my" : "/tickets/staff"}
+                >
+                  Tickets
+                </Link>
+              </li>
+
+              <li className="nav-item">
+                <Link className="nav-link" to="/history">
+                  Lịch sử
+                </Link>
+              </li>
+
+              {user.roleID === 2 && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/admin/users">
+                    Quản lý User
+                  </Link>
+                </li>
+              )}
+            </ul>
+
+            <ul className="navbar-nav ms-auto align-items-center">
+              <li className="nav-item position-relative">
+                <button
+                  className={`nav-link btn btn-link d-flex align-items-center gap-1 ${styles.notificationBtn}`}
+                  onClick={toggleNotifications}
+                  type="button"
+                >
+                  <i className="bi bi-bell fs-5"></i>
+                  {notifications.length > 0 && (
+                    <span className="badge bg-danger rounded-pill">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div
+                    className={`dropdown-menu dropdown-menu-end show shadow ${styles.dropdownMenu}`}
+                    style={{ marginLeft: '-230px' }}
+                  >
+                    <div className="dropdown-header bg-light border-bottom">
+                      <strong>Thông báo</strong>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className={`dropdown-item text-muted text-center py-4 ${styles.emptyMessage}`}>
+                        Không có thông báo mới
+                      </div>
+                    ) : (
+                      notifications.map((noti, idx) => (
+                        <div
+                          key={idx}
+                          className="dropdown-item border-bottom py-3"
+                        >
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div>{noti.notificationDescription}</div>
+                            <small className="text-muted ms-3">
+                              {new Date(noti.createdAt).toLocaleString("vi-VN")}
+                            </small>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </li>
+
+              <li className="nav-item">
+                <button
+                  className={`btn btn-outline-secondary ms-3 ${styles.logoutBtn}`}
+                  onClick={handleLogout}
+                >
+                  Đăng xuất
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header >
   );
 };
 

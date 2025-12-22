@@ -1,94 +1,239 @@
-// File: src/pages/StaffTicketList.js
+// src/pages/StaffTicketList.js
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { getMyTickets, acceptTicket, rejectTicket, getMyTicketsCount } from '../services/TicketService';
 import socket from '../services/SocketService';
 import { Link } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import styles from './StaffTicketList.scss';
 
 const StaffTicketList = () => {
     const user = useSelector((state) => state.user);
     const { enqueueSnackbar } = useSnackbar();
     const [tickets, setTickets] = useState([]);
     const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState('');
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState('CreatedAt DESC');
     const [page, setPage] = useState(1);
     const limit = 10;
 
+    const fetchTickets = async () => {
+        setLoading(true);
+        try {
+            await getMyTickets({ filterStatus: filterStatus || '', search, sort, page, limit }, setTickets);
+            await getMyTicketsCount({ filterStatus: filterStatus || '', search }, setTotal);
+        } catch (error) {
+            console.error('Error fetching tickets:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        getMyTickets({ filterStatus: filterStatus || '', search, sort, page, limit }, setTickets);
-        getMyTicketsCount({ filterStatus: filterStatus || '', search }, setTotal);
-        socket.on('ticketTransferred', () => getMyTickets({ filterStatus, search, sort, page, limit }, setTickets));
-        return () => socket.off('ticketTransferred');
+        fetchTickets();
+
+        const handleTicketUpdate = () => fetchTickets();
+        socket.on('ticketTransferred', handleTicketUpdate);
+        socket.on('ticketAccepted', handleTicketUpdate); // Nếu staff khác accept thì update
+        socket.on('ticketRejected', handleTicketUpdate);
+        socket.on('ticketCompleted', handleTicketUpdate);
+
+        return () => {
+            socket.off('ticketTransferred', handleTicketUpdate);
+            socket.off('ticketAccepted', handleTicketUpdate);
+            socket.off('ticketRejected', handleTicketUpdate);
+            socket.off('ticketCompleted', handleTicketUpdate);
+        };
     }, [filterStatus, search, sort, page]);
 
     const handleAccept = (ticketID) => {
-        acceptTicket({ ticketID }, {
-            success: () => {
-                enqueueSnackbar('Accepted', { variant: 'success' });
-                getMyTickets({ filterStatus, search, sort, page, limit }, setTickets);
-            },
-            error: (msg) => enqueueSnackbar(msg, { variant: 'error' }),
-        });
+        acceptTicket(
+            { ticketID },
+            {
+                success: () => {
+                    enqueueSnackbar('Ticket đã được chấp nhận', { variant: 'success' });
+                    fetchTickets();
+                },
+                error: (msg) => enqueueSnackbar(msg, { variant: 'error' }),
+            }
+        );
     };
 
     const handleReject = (ticketID) => {
-        rejectTicket({ ticketID }, {
-            success: () => {
-                enqueueSnackbar('Rejected', { variant: 'success' });
-                getMyTickets({ filterStatus, search, sort, page, limit }, setTickets);
-            },
-            error: (msg) => enqueueSnackbar(msg, { variant: 'error' }),
-        });
+        rejectTicket(
+            { ticketID },
+            {
+                success: () => {
+                    enqueueSnackbar('Ticket đã bị từ chối', { variant: 'success' });
+                    fetchTickets();
+                },
+                error: (msg) => enqueueSnackbar(msg, { variant: 'error' }),
+            }
+        );
+    };
+
+    const totalPages = Math.ceil(total / limit);
+
+    const getStatusBadge = (statusID) => {
+        const statusMap = {
+            1: { text: 'Pending', variant: 'warning' },
+            2: { text: 'Accepted', variant: 'success' },
+            3: { text: 'Rejected', variant: 'danger' },
+            4: { text: 'Completed', variant: 'secondary' },
+        };
+        const { text = 'Unknown', variant = 'secondary' } = statusMap[statusID] || {};
+        return <span className={`badge bg-${variant} px-3 py-2`}>{text}</span>;
     };
 
     return (
-        <div className="container mt-5">
-            <h2>Ticket hỗ trợ</h2>
-            <input className="form-control mb-3" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm kiếm" />
-            <select className="form-control mb-3" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                <option value="">Tất cả</option>
-                <option value="1">Pending</option>
-                <option value="2">Accept</option>
-                <option value="3">Reject</option>
-                <option value="4">Complete</option>
-            </select>
-            <select className="form-control mb-3" value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="CreatedAt DESC">Mới nhất</option>
-                <option value="CreatedAt ASC">Cũ nhất</option>
-            </select>
-            <table className="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Mô tả</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {tickets.map(t => (
-                        <tr key={t.ticketID}>
-                            <td>{t.ticketID}</td>
-                            <td>{t.ticketDescription}</td>
-                            <td>{t.ticketStatusID}</td>
-                            <td>
-                                {t.ticketStatusID === 1 && (
-                                    <>
-                                        <button className="btn btn-success" onClick={() => handleAccept(t.ticketID)}>Accept</button>
-                                        <button className="btn btn-danger" onClick={() => handleReject(t.ticketID)}>Reject</button>
-                                    </>
-                                )}
-                                {t.roomID && <Link to={`/chat/${t.roomID}`}>Chat</Link>}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <button className="btn btn-secondary" onClick={() => setPage(page - 1)} disabled={page === 1}>Prev</button>
-            <button className="btn btn-secondary" onClick={() => setPage(page + 1)} disabled={page * limit >= total}>Next</button>
+        <div className="container py-5">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="mb-0">Ticket Hỗ Trợ (Staff)</h2>
+                <div className="text-muted">
+                    Tổng: <strong>{total}</strong> ticket
+                </div>
+            </div>
+
+            {/* Filter & Search */}
+            <div className={`row g-3 mb-4 ${styles.filterRow}`}>
+                <div className="col-md-5">
+                    <input
+                        className="form-control form-control-lg"
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setPage(1);
+                        }}
+                        placeholder="Tìm kiếm theo mô tả hoặc tên phòng..."
+                    />
+                </div>
+                <div className="col-md-3">
+                    <select
+                        className="form-select form-select-lg"
+                        value={filterStatus}
+                        onChange={(e) => {
+                            setFilterStatus(e.target.value);
+                            setPage(1);
+                        }}
+                    >
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="1">Pending</option>
+                        <option value="2">Accepted</option>
+                        <option value="3">Rejected</option>
+                        <option value="4">Completed</option>
+                    </select>
+                </div>
+                <div className="col-md-4">
+                    <select
+                        className="form-select form-select-lg"
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value)}
+                    >
+                        <option value="CreatedAt DESC">Mới nhất trước</option>
+                        <option value="CreatedAt ASC">Cũ nhất trước</option>
+                    </select>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            ) : tickets.length === 0 ? (
+                <div className="alert alert-info text-center py-5">
+                    Không tìm thấy ticket nào phù hợp với bộ lọc hiện tại.
+                </div>
+            ) : (
+                <>
+                    <div className="table-responsive">
+                        <table className={`table table-hover ${styles.ticketTable}`}>
+                            <thead className="table-dark">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Mô tả</th>
+                                    <th scope="col">Trạng thái</th>
+                                    <th scope="col">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tickets.map((ticket) => (
+                                    <tr key={ticket.ticketID}>
+                                        <td className="fw-bold">#{ticket.ticketID}</td>
+                                        <td>{ticket.ticketDescription || '—'}</td>
+                                        <td>{getStatusBadge(ticket.ticketStatusID)}</td>
+                                        <td>
+                                            {ticket.ticketStatusID === 1 && (
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        className="btn btn-sm btn-success"
+                                                        onClick={() => handleAccept(ticket.ticketID)}
+                                                    >
+                                                        <i className="bi bi-check-circle me-1"></i> Chấp nhận
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-danger"
+                                                        onClick={() => handleReject(ticket.ticketID)}
+                                                    >
+                                                        <i className="bi bi-x-circle me-1"></i> Từ chối
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {ticket.roomID && ticket.ticketStatusID === 2 && (
+                                                <Link
+                                                    to={`/chat/${ticket.roomID}`}
+                                                    className="btn btn-sm btn-outline-primary"
+                                                >
+                                                    <i className="bi bi-chat-dots me-1"></i> Chat
+                                                </Link>
+                                            )}
+                                            {ticket.ticketStatusID !== 1 && !ticket.roomID && ticket.ticketStatusID !== 2 && (
+                                                <span className="text-muted">Không có hành động</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <nav aria-label="Page navigation" className="mt-4">
+                            <ul className="pagination justify-content-center">
+                                <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
+                                    <button
+                                        className="page-link"
+                                        onClick={() => setPage(page - 1)}
+                                        disabled={page === 1}
+                                    >
+                                        Trước
+                                    </button>
+                                </li>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                                    <li key={p} className={`page-item ${page === p ? 'active' : ''}`}>
+                                        <button className="page-link" onClick={() => setPage(p)}>
+                                            {p}
+                                        </button>
+                                    </li>
+                                ))}
+                                <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                                    <button
+                                        className="page-link"
+                                        onClick={() => setPage(page + 1)}
+                                        disabled={page === totalPages}
+                                    >
+                                        Sau
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    )}
+                </>
+            )}
         </div>
     );
 };

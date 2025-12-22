@@ -37,12 +37,14 @@ const History = () => {
                 </thead>
                 <tbody>
                     {rooms.map(r => (
-                        <tr key={r.roomID}>
-                            <td style={{ border: '1px solid black' }}>{r.roomName}</td>
-                            <td style={{ border: '1px solid black' }}>{r.lastMessage}</td>
-                            <td style={{ border: '1px solid black' }}>{r.lastMessageTime}</td>
-                            <td style={{ border: '1px solid black' }}><Link to={`/chat/${r.roomID}`}>Mở</Link></td>
-                        </tr>
+                        <div className='room-list'>
+                            <tr key={r.roomID}>
+                                <td style={{ border: '1px solid black' }}>{r.roomName}</td>
+                                <td style={{ border: '1px solid black' }}>{r.lastMessage}</td>
+                                <td style={{ border: '1px solid black' }}>{r.lastMessageTime}</td>
+                                <td style={{ border: '1px solid black' }}><Link to={`/chat/${r.roomID}`}>Mở</Link></td>
+                            </tr>
+                        </div>
                     ))}
                 </tbody>
             </table>

@@ -17,7 +17,7 @@ import ChatRoom from "./pages/ChatRoom";
 import History from "./pages/History";
 import AdminUsers from "./pages/AdminUsers";
 import Navbar from "./components/Navbar";
-
+import ChatLayout from "./components/ChatLayout";
 const App = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
@@ -25,9 +25,9 @@ const App = () => {
   useEffect(() => {
     const sessionId = localStorage.getItem('sessionId');
     if (sessionId && !socket.connected) {
-      socket.connect(); 
+      socket.connect();
     }
- 
+
   }, [dispatch]);
 
   useEffect(() => {
@@ -107,11 +107,11 @@ const App = () => {
         />
         <Route
           path="/chat/:roomId"
-          element={user ? <ChatRoom /> : <Navigate to="/login" />}
+          element={user ? <ChatLayout /> : <Navigate to="/login" />}
         />
         <Route
           path="/history"
-          element={user ? <History /> : <Navigate to="/login" />}
+          element={user ? <ChatLayout /> : <Navigate to="/login" />}
         />
         <Route
           path="/admin/users"

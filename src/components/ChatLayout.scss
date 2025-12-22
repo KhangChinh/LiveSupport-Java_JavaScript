@@ -1,0 +1,48 @@
+.chat-layout {
+    display: flex;
+    height: calc(100vh - 56px);
+    /* Giả sử navbar cao 56px, điều chỉnh nếu cần */
+    width: 100%;
+}
+
+.history-panel {
+    height: 100%;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    transition: width 0.3s ease;
+}
+
+.chat-panel {
+    height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.history-collapsed {
+    width: 37.5%;
+    /* ~3/8 */
+}
+
+.chat-expanded {
+    width: 62.5%;
+    /* ~5/8 */
+}
+
+@media (max-width: 992px) {
+    .chat-layout {
+        flex-direction: column;
+    }
+
+    .history-panel,
+    .chat-panel {
+        width: 100% !important;
+        height: 50%;
+    }
+}

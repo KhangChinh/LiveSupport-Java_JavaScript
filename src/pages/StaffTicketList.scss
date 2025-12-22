@@ -1,0 +1,52 @@
+// src/pages/StaffTicketList.module.scss
+
+.ticketTable {
+    thead th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        background-color: #343a40 !important;
+    }
+
+    tbody tr {
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+    }
+
+    td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        font-weight: 500;
+        min-width: 100px;
+        text-align: center;
+        padding: 0.5em 1em;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+}
+
+.filterRow {
+    @media (max-width: 576px) {
+        flex-direction: column !important;
+
+        >div {
+            margin-bottom: 0.75rem;
+        }
+    }
+}
