@@ -196,79 +196,46 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
   };
 
   return (
-    <div className="container mt-5">
-      <h2>Chat Room</h2>
-      <input
-        className="form-control mb-3"
-        value={roomName}
-        onChange={(e) => setRoomName(e.target.value)}
-        placeholder="Tên phòng"
-      />
-      <button className="btn btn-secondary mb-3" onClick={handleRename}>
-        Đổi tên
-      </button>
-      <div
-        style={{
-          height: "300px",
-          overflowY: "scroll",
-          border: "1px solid #ccc",
-          padding: "10px",
-        }}
-      >
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            style={{
-              marginBottom: "10px",
-              textAlign: msg.senderID === user.accountID ? "right" : "left",
-            }}
-          >
-            <strong>
-              {msg.senderID === user.accountID ? "You" : "Other"}:
-            </strong>
-            <Linkify
-              componentDecorator={(decoratedHref, decoratedText, key) => (
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={decoratedHref}
-                  key={key}
-                >
-                  {decoratedText}
-                </a>
-              )}
-            >
-              {msg.messageText}
-            </Linkify>
-            {msg.fileName && (
-              <div>
-                {isImage(msg.fileName) ? (
-                  <img
-                    src={`${process.env.REACT_APP_FILE_SERVER}${msg.filePath}`}
-                    alt={msg.fileName}
-                    style={{ maxWidth: "200px" }}
-                  />
-                ) : (
-                  <button
-                    onClick={() => handleDownload(msg.filePath, msg.fileName)}
-                  >
-                    Tải {msg.fileName}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+    <div className="chatroom-container">
+      {/* Header */}
+      <div className="chatroom-header">
+        {showBackButton && (
+          <button className="back-button" onClick={onBack}>
+            ← Trở về danh sách
+          </button>
+        )}
+        <div className="header-content">
+          <h4>Phòng chat: {roomName}</h4>
+          <input
+            className="room-name-input"
+            value={roomName}
+            onChange={(e) => setRoomName(e.target.value)}
+            placeholder="Tên phòng"
+          />
+          <button className="rename-button" onClick={handleRename}>
+            Đổi tên
+          </button>
+        </div>
       </div>
+
 
       {/* Nội dung chat */}
       <div className="chat-content">
-        <div className="messages-container">
+        <div
+          style={{
+            height: "300px",
+            overflowY: "scroll",
+            border: "1px solid #ccc",
+            padding: "10px",
+          }}
+        >
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`message ${msg.senderID === user.accountID ? "sent" : "received"
-                }`}
+              style={{
+                marginBottom: "10px",
+                textAlign: msg.senderID === user.accountID ? "right" : "left",
+              }}
             >
               <strong>
                 {msg.senderID === user.accountID ? "You" : "Other"}:
@@ -288,26 +255,16 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
                 {msg.messageText}
               </Linkify>
               {msg.fileName && (
-                <div className="file-preview">
+                <div>
                   {isImage(msg.fileName) ? (
                     <img
-                      src={`${process.env.REACT_APP_FILE_SERVER}/${getExtension(
-                        msg.fileName
-                      )}/${msg.fileName}`}
+                      src={`${process.env.REACT_APP_FILE_SERVER}${msg.filePath}`}
                       alt={msg.fileName}
-                      className="chat-image"
+                      style={{ maxWidth: "200px" }}
                     />
                   ) : (
                     <button
-                      className="download-button"
-                      onClick={() =>
-                        handleDownload(
-                          `${process.env.REACT_APP_FILE_SERVER}/${getExtension(
-                            msg.fileName
-                          )}/${msg.fileName}`,
-                          msg.fileName
-                        )
-                      }
+                      onClick={() => handleDownload(msg.filePath, msg.fileName)}
                     >
                       Tải {msg.fileName}
                     </button>
