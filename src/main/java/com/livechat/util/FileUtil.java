@@ -18,11 +18,15 @@ public class FileUtil {
         String subFolder = FILE_FOLDER + File.separator + ext;
         new File(subFolder).mkdirs();
         String uniqueFileName = UUID.randomUUID().toString() + "." + ext;
-        String filePath = subFolder + File.separator + uniqueFileName;
-        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+        String absoluteFilePath = subFolder + File.separator + uniqueFileName;
+        try (FileOutputStream fos = new FileOutputStream(absoluteFilePath)) {
             fos.write(fileBytes);
         }
-        return filePath;
+        // Trả về relative path cho DB và client
+        String relativePath = "/files/" + ext + "/" + uniqueFileName;
+        System.out.println("File saved to absolute path: " + absoluteFilePath);  // Log debug
+        System.out.println("Returning relative path for DB: " + relativePath);  // Log debug
+        return relativePath;
     }
 
     public static String getExtension(String fileName) {

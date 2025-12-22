@@ -30,6 +30,7 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
@@ -441,6 +442,7 @@ public class Main {
                         byte[] fileBytes = Base64.decodeBase64(data.getFileData());
                         try {
                             String filePath = FileUtil.saveFile(fileBytes, data.getFileName());
+                            System.out.println("FilePath to save in DB and emit: " + filePath);
                             FileModel file = new FileModel();
                             file.setFilePath(filePath);
                             file.setFileName(data.getFileName());
@@ -615,24 +617,38 @@ public class Main {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-            String uri = request.uri();
-            if (!uri.startsWith("/files/")) {
-                sendError(ctx, HttpResponseStatus.NOT_FOUND);
-                return;
-            }
-            String[] pathParts = uri.substring("/files/".length()).split("/");
-            if (pathParts.length < 2) {
-                sendError(ctx, HttpResponseStatus.NOT_FOUND);
-                return;
-            }
-            String ext = pathParts[0];
-            String fileName = pathParts[1];
-            String path = rootDir + File.separator + ext + File.separator + fileName;
-            File file = new File(path);
-            if (file.isHidden() || !file.exists() || !file.isFile()) {
-                sendError(ctx, HttpResponseStatus.NOT_FOUND);
-                return;
-            }
+            if (request.method().equals(HttpMethod.OPTIONS)) {
+        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
+        response.headers().set("Access-Control-Allow-Origin", "*");
+        response.headers().set("Access-Control-Allow-Methods", "GET, OPTIONS");
+        response.headers().set("Access-Control-Allow-Headers", "Content-Type");
+        response.headers().set("Access-Control-Max-Age", "3600");
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        return;
+    }
+    String uri = request.uri();
+    System.out.println("Requested URI: " + uri);
+    if (!uri.startsWith("/files/")) {
+        System.out.println("URI not starting with /files/: " + uri);
+        sendError(ctx, HttpResponseStatus.NOT_FOUND);
+        return;
+    }
+    String[] pathParts = uri.substring("/files/".length()).split("/");
+    if (pathParts.length < 2) {
+        System.out.println("Invalid path parts: " + Arrays.toString(pathParts));
+        sendError(ctx, HttpResponseStatus.NOT_FOUND);
+        return;
+    }
+    String ext = pathParts[0];
+    String fileName = pathParts[1];
+    String path = rootDir + File.separator + ext + File.separator + fileName;
+    System.out.println("Computed file path: " + path);
+    File file = new File(path);
+    if (file.isHidden() || !file.exists() || !file.isFile()) {
+        System.out.println("File invalid or not found: " + path);
+        sendError(ctx, HttpResponseStatus.NOT_FOUND);
+        return;
+    }   
             RandomAccessFile raf;
             try {
                 raf = new RandomAccessFile(file, "r");
