@@ -160,9 +160,25 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
   const isImage = (fileName) => /\.(jpg|jpeg|png|gif)$/i.test(fileName);
 
   const handleDownload = (filePath, fileName) => {
-    fetch(filePath, { mode: "cors" })
-      .then((response) => response.blob())
+    const fullUrl = `${process.env.REACT_APP_FILE_SERVER}${filePath}`;
+    console.log("Bắt đầu tải file từ URL: ", fullUrl); // Log URL đầy đủ để kiểm tra cấu hình
+
+    fetch(fullUrl, { mode: "cors" })
+      .then((response) => {
+        console.log("Response status: ", response.status); // Log mã trạng thái (nên là 200 nếu thành công)
+        console.log("Response headers: ", response.headers); // Log headers để xem Content-Type, v.v.
+        if (!response.ok) {
+          throw new Error(`Lỗi fetch: Status ${response.status}`); // Ném lỗi nếu không OK để bắt ở catch
+        }
+        return response.blob();
+      })
       .then((blob) => {
+        console.log(
+          "Blob nhận được: Kích thước ",
+          blob.size,
+          " bytes, Loại: ",
+          blob.type
+        ); // Log thông tin blob
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.style.display = "none";
@@ -173,30 +189,76 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       })
-      .catch(() => enqueueSnackbar("Download error", { variant: "error" }));
+      .catch((err) => {
+        console.error("Lỗi tải file: ", err.message); // Log lỗi chi tiết
+        enqueueSnackbar("Download error", { variant: "error" });
+      });
   };
 
   return (
-    <div className="chatroom-container">
-      {/* Header */}
-      <div className="chatroom-header">
-        {showBackButton && (
-          <button className="back-button" onClick={onBack}>
-            ← Trở về danh sách
-          </button>
-        )}
-        <div className="header-content">
-          <h4>Phòng chat: {roomName}</h4>
-          <input
-            className="room-name-input"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            placeholder="Tên phòng"
-          />
-          <button className="rename-button" onClick={handleRename}>
-            Đổi tên
-          </button>
-        </div>
+    <div className="container mt-5">
+      <h2>Chat Room</h2>
+      <input
+        className="form-control mb-3"
+        value={roomName}
+        onChange={(e) => setRoomName(e.target.value)}
+        placeholder="Tên phòng"
+      />
+      <button className="btn btn-secondary mb-3" onClick={handleRename}>
+        Đổi tên
+      </button>
+      <div
+        style={{
+          height: "300px",
+          overflowY: "scroll",
+          border: "1px solid #ccc",
+          padding: "10px",
+        }}
+      >
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            style={{
+              marginBottom: "10px",
+              textAlign: msg.senderID === user.accountID ? "right" : "left",
+            }}
+          >
+            <strong>
+              {msg.senderID === user.accountID ? "You" : "Other"}:
+            </strong>
+            <Linkify
+              componentDecorator={(decoratedHref, decoratedText, key) => (
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={decoratedHref}
+                  key={key}
+                >
+                  {decoratedText}
+                </a>
+              )}
+            >
+              {msg.messageText}
+            </Linkify>
+            {msg.fileName && (
+              <div>
+                {isImage(msg.fileName) ? (
+                  <img
+                    src={`${process.env.REACT_APP_FILE_SERVER}${msg.filePath}`}
+                    alt={msg.fileName}
+                    style={{ maxWidth: "200px" }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => handleDownload(msg.filePath, msg.fileName)}
+                  >
+                    Tải {msg.fileName}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Nội dung chat */}
