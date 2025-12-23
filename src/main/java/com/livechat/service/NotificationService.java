@@ -44,6 +44,27 @@ public class NotificationService {
         }
     }
 
+        public void clearAllNotifications(int accountID, int roleID) {
+        Connection conn = DatabaseManager.getConnection();
+        if (conn != null) {
+            try {
+                String sql = "DELETE FROM Notification WHERE ReceiveNotificationID = ? OR RoleReceive = ?";
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                pstmt.setInt(1, accountID);
+                pstmt.setInt(2, roleID);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
     public List<Notification> getMyNotifications(int accountID, int roleID) {
         List<Notification> notifications = new ArrayList<>();
         Connection conn = DatabaseManager.getConnection();

@@ -49,6 +49,7 @@ import java.io.RandomAccessFile;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -548,7 +549,15 @@ public class Main {
                 client.sendEvent("getMyNotificationsError", "Unauthorized");
             }
         });
-
+        
+        server.addEventListener("clearAllNotifications", Map.class, (client, data, ackSender) -> {
+            NotificationService notificationService = new NotificationService();
+            int accountID = ((Number) data.get("accountID")).intValue();
+            int roleID = ((Number) data.get("roleID")).intValue();
+            notificationService.clearAllNotifications(accountID, roleID);
+            client.sendEvent("notificationsCleared", true);  // Send confirmation to frontend
+        });
+        
         server.start();
 
         // File server (unchanged)
