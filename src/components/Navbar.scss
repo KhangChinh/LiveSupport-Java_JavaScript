@@ -1,13 +1,14 @@
+// Navbar.scss
+
 header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand {
     font-weight: 700;
-    color: var(--bs-primary) !important; // hoặc color: #0d6efd;
+    color: var(--bs-primary) !important;
 }
 
-// Scoped styles (sử dụng CSS Modules)
 .container-fluid {
     padding: 0.5rem 1rem;
 }
@@ -43,12 +44,11 @@ header {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(0, 0, 0, 0.1);
 
-
     .dropdown-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #dee2e6;
         font-weight: 600;
-
+        padding: 0.75rem 1rem;
     }
 
     .dropdown-item {
@@ -69,6 +69,12 @@ header {
         padding: 1.5rem;
         color: #6c757d;
     }
+}
+
+.notificationItem {
+    user-select: none;       
+    pointer-events: none;    
+    cursor: default;
 }
 
 .logout-btn {

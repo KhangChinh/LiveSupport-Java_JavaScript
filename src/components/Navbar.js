@@ -3,10 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { logout } from "../services/AccountService";
-import { getMyNotifications } from "../services/NotificationService";
+import { getMyNotifications, clearAllNotifications } from "../services/NotificationService";
 import socket from "../services/SocketService";
 
-import styles from "./Navbar.scss"; // Import SCSS module
+import styles from "./Navbar.scss"; // Giữ nguyên tên file
 
 const Navbar = () => {
   const user = useSelector((state) => state.user);
@@ -37,6 +37,22 @@ const Navbar = () => {
   const toggleNotifications = () => {
     setShowNotifications((prev) => !prev);
   };
+
+const handleClearAllNotifications = () => {
+  if (!user || !user.accountID || user.roleID === undefined) {
+    return;
+  }
+
+  clearAllNotifications(user.accountID, user.roleID, (success) => {
+    if (success) {
+      dispatch({ type: "CLEAR_NOTIFICATIONS" });
+      getMyNotifications((notis) => {
+        dispatch({ type: "UPDATE_NOTIFICATIONS", payload: notis });
+      });
+      setShowNotifications(false);
+    }
+  });
+};
 
   if (!user) return null;
 
@@ -120,9 +136,18 @@ const Navbar = () => {
                     className={`dropdown-menu dropdown-menu-end show shadow ${styles.dropdownMenu}`}
                     style={{ marginLeft: '-230px' }}
                   >
-                    <div className="dropdown-header bg-light border-bottom">
+                    <div className="dropdown-header bg-light border-bottom d-flex justify-content-between align-items-center">
                       <strong>Thông báo</strong>
+                      {notifications.length > 0 && (
+                        <button
+                          className="btn btn-sm btn-link text-danger p-0"
+                          onClick={handleClearAllNotifications}
+                        >
+                          Xóa hết
+                        </button>
+                      )}
                     </div>
+
                     {notifications.length === 0 ? (
                       <div className={`dropdown-item text-muted text-center py-4 ${styles.emptyMessage}`}>
                         Không có thông báo mới
@@ -131,7 +156,7 @@ const Navbar = () => {
                       notifications.map((noti, idx) => (
                         <div
                           key={idx}
-                          className="dropdown-item border-bottom py-3"
+                          className={`dropdown-item border-bottom py-3 ${styles.notificationItem}`}
                         >
                           <div className="d-flex justify-content-between align-items-start">
                             <div>{noti.notificationDescription}</div>
@@ -158,7 +183,7 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-    </header >
+    </header>
   );
 };
 
