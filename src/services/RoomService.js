@@ -25,6 +25,10 @@ export const getMyRoomsCount = (data, callback) => {
 
 export const getRoomById = (data, callback) => {
     socket.emit('getRoomById', data);
-    socket.once('roomInfo', callback.success);
-    socket.once('getRoomError', callback.error);
+    socket.once('roomInfo', (room) => {
+        callback.success(room);
+    });
+    socket.once('getRoomError', (errorMsg) => {
+        callback.error(errorMsg);
+    });
 };

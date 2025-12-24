@@ -1,5 +1,5 @@
 // File: src/pages/ChatRoom.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import Linkify from "react-linkify";
@@ -26,6 +26,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const messagesEndRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -39,8 +40,9 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
   const [ratingPoint, setRatingPoint] = useState(5);
   const [ratingDesc, setRatingDesc] = useState("");
   const [ticketID, setTicketID] = useState(null);
-
+  const [isEditingRoomName, setIsEditingRoomName] = useState(false);
   useEffect(() => {
+    console.log("Fetching room info for", roomId);
     getRoomById(
       { roomID: roomId },
       {
@@ -50,6 +52,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
         },
         error: (msg) => {
           enqueueSnackbar(msg, { variant: "error" });
+          console.log("Navigating to dashboard due to error");
           navigate("/dashboard");
         },
       }
@@ -98,7 +101,9 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
     }
   };
 
-  const handleSendFile = () => {
+  const handleSend = () => {
+    if (!message.trim() && !file) return;
+
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -120,6 +125,15 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
         setFile(null);
       };
       reader.readAsDataURL(file);
+    } else {
+      const myMsg = {
+        senderID: user.accountID,
+        messageText: message,
+        fileName: null,
+      };
+      setMessages((prev) => [...prev, myMsg]);
+      sendMessage({ roomID: roomId, message });
+      setMessage("");
     }
   };
 
@@ -200,76 +214,97 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
       {/* Header */}
       <div className="chatroom-header">
         {showBackButton && (
-          <button className="back-button" onClick={onBack}>
-            ← Trở về danh sách
+          <button className="back-button me-auto mb-2 mb-lg-0" onClick={onBack}>
+            ← Trở về
           </button>
         )}
-        <div className="header-content">
-          <h4>Phòng chat: {roomName}</h4>
-          <input
-            className="room-name-input"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            placeholder="Tên phòng"
-          />
-          <button className="rename-button" onClick={handleRename}>
-            Đổi tên
-          </button>
+        <div className="header-content ">
+          {!isEditingRoomName ? (
+            <>
+              <div className="room-title">{roomName}</div>
+              <button
+                className="edit-button"
+                onClick={() => setIsEditingRoomName(true)}
+              >
+                ✏️ Chỉnh sửa
+              </button>
+            </>
+          ) : (
+            <>
+              <input
+                className="room-name-input"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                placeholder="Tên phòng"
+                autoFocus
+              />
+              <button
+                className="save-button"
+                onClick={handleRename && (() => setIsEditingRoomName(false))}
+              >
+                Lưu
+              </button>
+              <button
+                className="cancel-button"
+                onClick={() => {
+                  setIsEditingRoomName(false);
+                  // Optional: reset về tên cũ nếu cần
+                }}
+              >
+                Hủy
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* Nội dung chat */}
       <div className="chat-content">
-        <div
-          style={{
-            height: "300px",
-            overflowY: "scroll",
-            border: "1px solid #ccc",
-            padding: "10px",
-          }}
-        >
+        <div className="messages-container">
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              style={{
-                marginBottom: "10px",
-                textAlign: msg.senderID === user.accountID ? "right" : "left",
-              }}
+              className={`message-bubble ${
+                msg.senderID === user.accountID ? "sent" : "received"
+              }`}
             >
-              <strong>
-                {msg.senderID === user.accountID ? "You" : "Other"}:
-              </strong>
-              <Linkify
-                componentDecorator={(decoratedHref, decoratedText, key) => (
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={decoratedHref}
-                    key={key}
-                  >
-                    {decoratedText}
-                  </a>
-                )}
-              >
-                {msg.messageText}
-              </Linkify>
-              {msg.fileName && (
-                <div>
-                  {isImage(msg.fileName) ? (
-                    <img
-                      src={`${process.env.REACT_APP_FILE_SERVER}${msg.filePath}`}
-                      alt={msg.fileName}
-                      style={{ maxWidth: "200px" }}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => handleDownload(msg.filePath, msg.fileName)}
+              <div className="message-content">
+                <Linkify
+                  componentDecorator={(decoratedHref, decoratedText, key) => (
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href={decoratedHref}
+                      key={key}
                     >
-                      Tải {msg.fileName}
-                    </button>
+                      {decoratedText}
+                    </a>
                   )}
-                </div>
-              )}
+                >
+                  {msg.messageText}
+                </Linkify>
+
+                {msg.fileName && (
+                  <div className="file-preview">
+                    {isImage(msg.fileName) ? (
+                      <img
+                        src={`${process.env.REACT_APP_FILE_SERVER}${msg.filePath}`}
+                        alt={msg.fileName}
+                        className="chat-image"
+                      />
+                    ) : (
+                      <div
+                        className="download-button"
+                        onClick={() =>
+                          handleDownload(msg.filePath, msg.fileName)
+                        }
+                      >
+                        Tải {msg.fileName}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -282,27 +317,24 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Nhập tin nhắn..."
-              onKeyDown={(e) => {
+              onKeyPress={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  handleSendMessage();
+                  handleSend();
                 }
               }}
             />
-            <div className="action-buttons">
-              <button className="send-button" onClick={handleSendMessage}>
-                Gửi
-              </button>
-              <button className="file-upload-label">
-                <input
-                  type="file"
-                  onChange={(e) => setFile(e.target.files[0])}
-                />
-              </button>
-              <button className="file-upload-button" onClick={handleSendFile}>
-                Gửi file
-              </button>
-            </div>
+            <label className="file-upload-label">
+              <input
+                type="file"
+                onChange={(e) => setFile(e.target.files[0])}
+                style={{ display: "none" }}
+              />
+              <span className="attachment-icon">📎</span>
+            </label>
+            <button className="send-button" onClick={handleSend}>
+              Gửi
+            </button>
           </div>
         )}
 
