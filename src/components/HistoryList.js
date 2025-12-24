@@ -1,7 +1,9 @@
+// src/components/HistoryList.js
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { getMyRooms, getMyRoomsCount } from "../services/RoomService";
 import "./HistoryList.scss";
+import { FiSearch, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const HistoryList = ({ selectedRoomId, onSelectRoom }) => {
     const user = useSelector((state) => state.user);
@@ -17,71 +19,98 @@ const HistoryList = ({ selectedRoomId, onSelectRoom }) => {
         getMyRoomsCount({ search }, setTotal);
     }, [search, sort, page]);
 
+    const totalPages = Math.ceil(total / limit);
+
     return (
-        <div className="history-list-container">
-            <h3>Lịch sử chat</h3>
-
-            <input
-                className="search-input"
-                value={search}
-                onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                }}
-                placeholder="Tìm tên phòng..."
-            />
-
-            <select
-                className="sort-select"
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-            >
-                <option value="LastMessageTime DESC">Mới nhất</option>
-                <option value="LastMessageTime ASC">Cũ nhất</option>
-            </select>
-
-            <table className="room-table">
-                <thead>
-                    <tr>
-                        <th>Tên phòng</th>
-                        <th>Tin cuối</th>
-                        <th>Thời gian</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rooms.map((r) => (
-                        <tr
-                            key={r.roomID}
-                            className={`room-row ${selectedRoomId === r.roomID ? "selected" : ""}`}
-                            onClick={() => onSelectRoom(r.roomID)}
-                        >
-                            <td>{r.roomName}</td>
-                            <td>{r.lastMessage || "—"}</td>
-                            <td>{r.lastMessageTime || "—"}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            <div style={{ marginTop: "1rem", textAlign: "center" }}>
-                <button
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    style={{ marginRight: "1rem" }}
-                >
-                    Prev
-                </button>
-                <span>
-                    Trang {page} / {Math.ceil(total / limit)}
-                </span>
-                <button
-                    onClick={() => setPage(page + 1)}
-                    disabled={page * limit >= total}
-                    style={{ marginLeft: "1rem" }}
-                >
-                    Next
-                </button>
+        <div className="history-list">
+            <div className="history-list__header">
+                <h3 className="history-list__title">Lịch sử hội thoại</h3>
             </div>
+
+            <div className="history-list__controls">
+                <div className="search-wrapper">
+                    <FiSearch className="search-icon" />
+                    <input
+                        type="text"
+                        className="search-input"
+                        placeholder="Tìm theo tên khách hàng hoặc phòng..."
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setPage(1);
+                        }}
+                    />
+                </div>
+
+                <select
+                    className="sort-select"
+                    value={sort}
+                    onChange={(e) => {
+                        setSort(e.target.value);
+                        setPage(1);
+                    }}
+                >
+                    <option value="LastMessageTime DESC">Mới nhất trước</option>
+                    <option value="LastMessageTime ASC">Cũ nhất trước</option>
+                </select>
+            </div>
+
+            <div className="history-list__body">
+                {rooms.length === 0 ? (
+                    <div className="no-results">
+                        Không tìm thấy hội thoại nào.
+                    </div>
+                ) : (
+                    <ul className="room-list">
+                        {rooms.map((room) => (
+                            <li
+                                key={room.roomID}
+                                className={`room-item ${selectedRoomId === room.roomID ? "active" : ""}`}
+                                onClick={() => onSelectRoom(room.roomID)}
+                            >
+                                <div className="room-info">
+                                    <div className="room-name">{room.roomName || "Khách hàng không tên"}</div>
+                                    <div className="room-last-message">
+                                        {room.lastMessage ? room.lastMessage.substring(0, 60) + "..." : "Chưa có tin nhắn"}
+                                    </div>
+                                </div>
+                                <div className="room-time">
+                                    {room.lastMessageTime
+                                        ? new Date(room.lastMessageTime).toLocaleString("vi-VN", {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                        })
+                                        : "—"}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            {totalPages > 1 && (
+                <div className="history-list__pagination">
+                    <button
+                        className="pagination-btn"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                    >
+                        <FiChevronLeft />
+                    </button>
+                    <span className="pagination-text">
+                        Trang {page} / {totalPages}
+                    </span>
+                    <button
+                        className="pagination-btn"
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                    >
+                        <FiChevronRight />
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

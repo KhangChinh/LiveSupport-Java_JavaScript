@@ -182,13 +182,15 @@ const StaffTicketList = () => {
                                                     </button>
                                                 </div>
                                             )}
-                                            {ticket.roomID && ticket.ticketStatusID === 2 && (
+                                            {ticket.roomID && ticket.ticketStatusID === 2 ? (
                                                 <Link
                                                     to={`/chat/${ticket.roomID}`}
                                                     className="btn btn-sm btn-outline-primary"
                                                 >
                                                     <i className="bi bi-chat-dots me-1"></i> Chat
                                                 </Link>
+                                            ) : (
+                                                <span className="text-muted"></span>
                                             )}
                                             {ticket.ticketStatusID !== 1 && !ticket.roomID && ticket.ticketStatusID !== 2 && (
                                                 <span className="text-muted">Không có hành động</span>

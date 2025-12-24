@@ -14,7 +14,7 @@ import CreateTicket from "./pages/CreateTicket";
 import TicketList from "./pages/TicketList";
 import StaffTicketList from "./pages/StaffTicketList";
 import ChatRoom from "./pages/ChatRoom";
-import History from "./pages/History";
+import HistoryList from "./components/HistoryList";
 import AdminUsers from "./pages/AdminUsers";
 import Navbar from "./components/Navbar";
 import ChatLayout from "./components/ChatLayout";
