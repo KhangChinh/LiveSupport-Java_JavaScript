@@ -17,12 +17,13 @@ function rootReducer(state = initialState, action) {
         ...state,
         user: action.payload.user,
         sessionId: action.payload.sessionId,
+        authenticated: true,
       };
     case "LOGOUT":
       // Xóa localStorage khi logout
       localStorage.removeItem("user");
       localStorage.removeItem("sessionId");
-      return { ...state, user: null, sessionId: null, notifications: [] };
+      return { ...state, user: null, sessionId: null, notifications: [] , authenticated: false };
     case "UPDATE_NOTIFICATIONS":
       return { ...state, notifications: action.payload };
     case "ADD_NOTIFICATION":
