@@ -1,0 +1,170 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: 600;
+  }
+  p {
+    font-size: 16px;
+    color: #7f8c8d;
+    margin-bottom: 20px;
+  }
+  .stats-section {
+    margin-top: 40px;
+    h3 {
+      color: #34495e;
+      margin-bottom: 25px;
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .stats-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 130px;
+      @media (max-width: 768px) {
+        flex-direction: column;
+      }
+    }
+    .pie-chart {
+      flex: 1;
+      max-width: 450px;
+      background-color: #f9fbfc;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      p {
+        text-align: center;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-top: 15px;
+      }
+    }
+    .rating-distribution {
+      flex: 1;
+      max-width: 450px;
+      h4 {
+        color: #34495e;
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .distribution-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .stars {
+        color: #f39c12;
+        font-size: 14px;
+        min-width: 70px;
+        text-align: right;
+      }
+      .bar-container {
+        flex: 1;
+        height: 8px;
+        background-color: #ecf0f1;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .bar {
+        height: 100%;
+        background: linear-gradient(to right, #3498db, #2980b9);
+        transition: width 0.3s ease;
+      }
+      .count {
+        color: #7f8c8d;
+        font-size: 14px;
+        min-width: 40px;
+      }
+      .total-ratings {
+        text-align: right;
+        color: #34495e;
+        font-weight: 500;
+        margin-top: 15px;
+      }
+    }
+    .comments-list {
+      margin-top: 40px;
+      h4 {
+        color: #34495e;
+        margin-bottom: 20px;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        li {
+          background-color: #f9fbfc;
+          padding: 20px;
+          margin-bottom: 15px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+          transition: box-shadow 0.2s ease;
+          &:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+          }
+          .comment-header {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+          }
+          .comment-body {
+            font-style: italic;
+            color: #34495e;
+            margin-bottom: 5px;
+          }
+          .comment-footer {
+            font-size: 14px;
+            color: #7f8c8d;
+          }
+        }
+      }
+    }
+    // Thêm style cho phần phân trang
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
+      button {
+        padding: 8px 16px;
+        background-color: #3498db;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        &:hover {
+          background-color: #2980b9;
+        }
+        &:disabled {
+          background-color: #bdc3c7;
+          cursor: not-allowed;
+        }
+      }
+      span {
+        font-weight: 600;
+        color: #34495e;
+      }
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  }
+}
