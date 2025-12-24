@@ -157,6 +157,12 @@
     }
 }
 
+.notificationItem {
+    user-select: none;
+    pointer-events: none;
+    cursor: default;
+}
+
 .logoutBtn {
     background-color: #e82536;
     color: white;

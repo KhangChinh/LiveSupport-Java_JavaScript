@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom"; // Thêm useLocation
 import { logout } from "../services/AccountService";
-import { getMyNotifications } from "../services/NotificationService";
+import { getMyNotifications, clearAllNotifications } from "../services/NotificationService";
 import socket from "../services/SocketService";
 
 import styles from "./Navbar.module.scss"; // Đổi tên file SCSS thành module cho scoped styles
@@ -51,6 +51,22 @@ const Navbar = () => {
     // (ở đây ta sẽ xử lý hoverActive qua onMouseEnter/Leave riêng)
     return "";
   };
+  const handleClearAllNotifications = () => {
+    if (!user || !user.accountID || user.roleID === undefined) {
+      return;
+    }
+
+    clearAllNotifications(user.accountID, user.roleID, (success) => {
+      if (success) {
+        dispatch({ type: "CLEAR_NOTIFICATIONS" });
+        getMyNotifications((notis) => {
+          dispatch({ type: "UPDATE_NOTIFICATIONS", payload: notis });
+        });
+        setShowNotifications(false);
+      }
+    });
+  };
+
   if (!user) return null;
 
   return (
@@ -163,7 +179,16 @@ const Navbar = () => {
                     style={{ marginLeft: '-250px', width: '430px' }}>
                     <div className={`dropdown-header ${styles.dropdownHeader}`}>
                       <strong>Thông báo</strong>
+                      {notifications.length > 0 && (
+                        <button
+                          className="btn btn-sm btn-link text-danger p-0"
+                          onClick={handleClearAllNotifications}
+                        >
+                          Xóa hết
+                        </button>
+                      )}
                     </div>
+
                     {notifications.length === 0 ? (
                       <div className={`dropdown-item text-muted text-center py-4 ${styles.emptyMessage}`}>
                         Không có thông báo mới
@@ -172,7 +197,7 @@ const Navbar = () => {
                       notifications.map((noti, idx) => (
                         <div
                           key={idx}
-                          className="dropdown-item border-bottom py-3 position-relative"
+                          className={`dropdown-item border-bottom py-3 ${styles.notificationItem}`}
                         >
                           <div className="d-flex justify-content-between align-items-start"
                             style={{ height: '40px' }}>
