@@ -690,14 +690,31 @@ public class Main {
         }
 
         private static void setContentTypeHeader(FullHttpResponse response, File file) {
-            String mimeType = "application/octet-stream";
-            try {
-                mimeType = java.nio.file.Files.probeContentType(file.toPath());
-            } catch (IOException e) {
-                // Ignore
-            }
-            response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeType == null ? "application/octet-stream" : mimeType);
+    String fileName = file.getName().toLowerCase();
+    String mimeType = "application/octet-stream"; // Default
+    if (fileName.endsWith(".txt")) {
+        mimeType = "text/plain";
+    } else if (fileName.endsWith(".pdf")) {
+        mimeType = "application/pdf";
+    } else if (fileName.endsWith(".gif")) {
+        mimeType = "image/gif";
+    } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+        mimeType = "image/jpeg";
+    } else if (fileName.endsWith(".png")) {
+        mimeType = "image/png";
+    } else if (fileName.endsWith(".docx")) {
+        mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    } else if (fileName.endsWith(".xlsx")) {
+        mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    } else {
+        try {
+            mimeType = java.nio.file.Files.probeContentType(file.toPath());
+        } catch (IOException e) {
+            // Ignore
         }
+    }
+    response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeType == null ? "application/octet-stream" : mimeType);
+}
 
         private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
             FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));

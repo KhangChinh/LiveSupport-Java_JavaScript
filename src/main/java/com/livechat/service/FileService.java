@@ -39,26 +39,26 @@ public class FileService {
     }
 
     public int getFileTypeIDByCode(String code) {
-        Connection conn = DatabaseManager.getConnection();
-        if (conn != null) {
+    Connection conn = DatabaseManager.getConnection();
+    if (conn != null) {
+        try {
+            String sql = "SELECT FileTypeID FROM FileType WHERE FileTypeCode = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, code);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("FileTypeID");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
             try {
-                String sql = "SELECT FileTypeID FROM FileType WHERE FileTypeCode = ?";
-                PreparedStatement pstmt = conn.prepareStatement(sql);
-                pstmt.setString(1, code);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("FileTypeID");
-                }
+                conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
             }
         }
-        return 1; // Default to txt or something
     }
+    return 1; // Default to txt
+}
 }
