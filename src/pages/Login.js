@@ -93,11 +93,6 @@ const LoginForm = ({ toggle }) => {
                 <div className="text-danger">{errors.password}</div>
               ) : null}
             </div>
-            <div className="password-util">
-              <Link to="/forgotpassword" className="forgot-password">
-                Quên mật khẩu?
-              </Link>
-            </div>
             <button type="submit" className="login-button">
               <p>Đăng nhập</p>
             </button>
