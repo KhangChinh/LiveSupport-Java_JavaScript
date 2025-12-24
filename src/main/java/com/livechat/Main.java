@@ -49,6 +49,7 @@ import java.io.RandomAccessFile;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -238,7 +239,7 @@ public class Main {
                 Ticket created = ticketService.createTicket(ticket);
                 if (created != null) {
                     Notification noti = new Notification();
-                    noti.setNotificationDescription("New ticket #" + created.getTicketID());
+                    noti.setNotificationDescription("Ticket #" + created.getTicketID()+ " từ " + current.getAccountName() + " đang chờ xác nhận");
                     noti.setSendNotificationID(current.getAccountID());
                     if (data.getStaffID() != null) {
                         noti.setReceiveNotificationID(data.getStaffID());
@@ -286,7 +287,7 @@ public class Main {
                         Ticket ticket = ticketService.getTicketById(data.getTicketID());
                         ticket.setRoomID(room.getRoomID());
                         Notification noti = new Notification();
-                        noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " accepted");
+                        noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " của bạn đã được chấp nhận");
                         noti.setSendNotificationID(current.getAccountID());
                         noti.setReceiveNotificationID(ticket.getCustomerID());
                         notificationService.createNotification(noti);
@@ -310,7 +311,7 @@ public class Main {
                 if (success) {
                     Ticket ticket = ticketService.getTicketById(data.getTicketID());
                     Notification noti = new Notification();
-                    noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " rejected");
+                    noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " đã bị từ chối");
                     noti.setSendNotificationID(current.getAccountID());
                     noti.setReceiveNotificationID(ticket.getCustomerID());
                     notificationService.createNotification(noti);
@@ -341,7 +342,7 @@ public class Main {
                 if (success) {
                     Ticket ticket = ticketService.getTicketById(data.getTicketID());
                     Notification noti = new Notification();
-                    noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " transferred to you");
+                    noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " được chuyển tiếp đến bạn");
                     noti.setSendNotificationID(current.getAccountID());
                     noti.setReceiveNotificationID(data.getNewStaffID());
                     notificationService.createNotification(noti);
@@ -364,7 +365,7 @@ public class Main {
                     boolean success = ticketService.endTicket(data.getTicketID(), data.getRatingPoint(), data.getRatingDesc());
                     if (success) {
                         Notification noti = new Notification();
-                        noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " completed");
+                        noti.setNotificationDescription("Ticket #" + ticket.getTicketID() + " đã hoàn thành");
                         noti.setSendNotificationID(current.getAccountID());
                         noti.setReceiveNotificationID(ticket.getStaffID());
                         notificationService.createNotification(noti);
@@ -548,9 +549,38 @@ public class Main {
                 client.sendEvent("getMyNotificationsError", "Unauthorized");
             }
         });
-
+        server.addEventListener("getRoomById", JoinRoomRequest.class, (client, data, ack) -> {
+            Account current = clientAccounts.get(client.getSessionId());
+            if (current != null) {
+                Room room = roomService.getRoomById(data.getRoomID());
+                if (room != null) {
+                    Ticket ticket = ticketService.getTicketById(room.getTicketID());
+                    if (ticket != null &&
+                        (ticket.getCustomerID() == current.getAccountID() ||
+                         ticket.getStaffID() == current.getAccountID())) {
+                        System.out.println("Emit roomInfo cho client: " + client.getSessionId() + " với room: " + room.getRoomID());
+                        client.sendEvent("roomInfo", room);
+                    } else {
+                        client.sendEvent("getRoomError", "Unauthorized or room not found");
+                    }
+                } else {
+                    client.sendEvent("getRoomError", "Room not found");
+                }
+            } else {
+                client.sendEvent("getRoomError", "Unauthorized");
+            }
+        });
+        
+        server.addEventListener("clearAllNotifications", Map.class, (client, data, ackSender) -> {
+            NotificationService notificationService = new NotificationService();
+            int accountID = ((Number) data.get("accountID")).intValue();
+            int roleID = ((Number) data.get("roleID")).intValue();
+            notificationService.clearAllNotifications(accountID, roleID);
+            client.sendEvent("notificationsCleared", true);  // Send confirmation to frontend
+        });
+        
         server.start();
-
+        
         // File server (unchanged)
         NioEventLoopGroup bossGroup = new NioEventLoopGroup(1);
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
