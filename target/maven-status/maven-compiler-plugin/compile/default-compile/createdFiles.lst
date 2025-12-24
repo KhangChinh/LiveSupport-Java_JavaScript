@@ -8,6 +8,7 @@ com\livechat\Main$StaticFileHandler$1.class
 com\livechat\model\Room.class
 com\livechat\dto\CreateAccountRequest.class
 com\livechat\service\AccountService.class
+com\livechat\model\RatingStats.class
 com\livechat\Main$3.class
 com\livechat\Main$StaticFileHandler.class
 com\livechat\DatabaseManager.class
@@ -27,6 +28,7 @@ com\livechat\util\BcryptUtil.class
 com\livechat\service\NotificationService.class
 com\livechat\dto\AcceptTicketRequest.class
 com\livechat\dto\RegisterRequest.class
+com\livechat\model\RatingComment.class
 com\livechat\Main$SessionEntry.class
 com\livechat\model\Role.class
 com\livechat\model\Message.class

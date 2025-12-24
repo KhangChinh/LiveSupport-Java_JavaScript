@@ -55,6 +55,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import com.livechat.model.RatingStats;
 
 public class Main {
     private static final Map<UUID, SocketIOClient> clientsMap = new HashMap<>();
@@ -134,6 +135,19 @@ public class Main {
                 }
             }
         });
+     server.addEventListener("getRatingStats", Map.class, (client, data, ack) -> {
+    Account current = clientAccounts.get(client.getSessionId());
+    if (current != null) {
+        RatingStats stats = ticketService.getRatingStats(current.getAccountID(), current.getRoleID());
+        if (stats != null) {
+            client.sendEvent("ratingStats", stats);
+        } else {
+            client.sendEvent("getRatingStatsError", "Error fetching stats");
+        }
+    } else {
+        client.sendEvent("getRatingStatsError", "Unauthorized");
+    }
+});
 
         server.addEventListener("register", RegisterRequest.class, (client, data, ack) -> {
             if (StringUtils.isBlank(data.getEmail()) || StringUtils.isBlank(data.getPassword()) || StringUtils.isBlank(data.getAccountName())) {

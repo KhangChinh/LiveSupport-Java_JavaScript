@@ -1,6 +1,8 @@
 package com.livechat.service;
 import com.livechat.model.Ticket;
 import com.livechat.DatabaseManager;
+import com.livechat.model.RatingComment;
+import com.livechat.model.RatingStats;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,7 +10,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 public class TicketService {
     public Ticket createTicket(Ticket ticket) {
         Connection conn = DatabaseManager.getConnection();
@@ -285,4 +289,62 @@ public class TicketService {
         }
         return null;
     }
+   public RatingStats getRatingStats(int accountID, int roleID) {
+    RatingStats stats = new RatingStats();
+    Connection conn = DatabaseManager.getConnection();
+    if (conn != null) {
+        try {
+            String sql = "SELECT t.RatingPoint, t.RatingDescription, t.TicketID, a.AccountName as CustomerName " +
+                         "FROM Ticket t JOIN Account a ON t.CustomerID = a.AccountID " +
+                         "WHERE t.TicketStatusID = 4 AND t.RatingPoint IS NOT NULL";
+            if (roleID == 1) {
+                sql += " AND t.CustomerID = ?";
+            } else if (roleID == 2 || roleID == 3) {
+                sql += " AND t.StaffID = ?";
+            }
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            if (roleID == 1 || roleID == 2 || roleID == 3) {
+                pstmt.setInt(1, accountID);
+            }
+            ResultSet rs = pstmt.executeQuery();
+
+            int totalRatings = 0;
+            double sumRatings = 0.0;
+            Map<Integer, Integer> counts = new HashMap<>();
+            for (int i = 1; i <= 5; i++) {
+                counts.put(i, 0);
+            }
+            List<RatingComment> comments = new ArrayList<>();
+
+            while (rs.next()) {
+                int rating = rs.getInt("RatingPoint");
+                sumRatings += rating;
+                totalRatings++;
+                counts.put(rating, counts.get(rating) + 1);
+
+                RatingComment comment = new RatingComment();
+                comment.setTicketID(rs.getInt("TicketID"));
+                comment.setRatingPoint(rating);
+                comment.setRatingDescription(rs.getString("RatingDescription"));
+                comment.setCustomerName(rs.getString("CustomerName"));
+                comments.add(comment);
+            }
+
+            stats.setAverageRating(totalRatings > 0 ? sumRatings / totalRatings : 0.0);
+            stats.setRatingCounts(counts);
+            stats.setComments(comments);
+
+            return stats;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    return null;
+}
 }
