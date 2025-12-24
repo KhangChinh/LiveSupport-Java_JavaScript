@@ -161,14 +161,14 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
 
   const handleDownload = (filePath, fileName) => {
     const fullUrl = `${process.env.REACT_APP_FILE_SERVER}${filePath}`;
-    console.log("Bắt đầu tải file từ URL: ", fullUrl); // Log URL đầy đủ để kiểm tra cấu hình
+    console.log("Bắt đầu tải file từ URL: ", fullUrl);
 
     fetch(fullUrl, { mode: "cors" })
       .then((response) => {
-        console.log("Response status: ", response.status); // Log mã trạng thái (nên là 200 nếu thành công)
-        console.log("Response headers: ", response.headers); // Log headers để xem Content-Type, v.v.
+        console.log("Response status: ", response.status);
+        console.log("Response headers: ", response.headers);
         if (!response.ok) {
-          throw new Error(`Lỗi fetch: Status ${response.status}`); // Ném lỗi nếu không OK để bắt ở catch
+          throw new Error(`Lỗi fetch: Status ${response.status}`);
         }
         return response.blob();
       })
@@ -178,7 +178,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
           blob.size,
           " bytes, Loại: ",
           blob.type
-        ); // Log thông tin blob
+        );
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.style.display = "none";
@@ -190,7 +190,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
         document.body.removeChild(a);
       })
       .catch((err) => {
-        console.error("Lỗi tải file: ", err.message); // Log lỗi chi tiết
+        console.error("Lỗi tải file: ", err.message);
         enqueueSnackbar("Download error", { variant: "error" });
       });
   };
@@ -217,7 +217,6 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
           </button>
         </div>
       </div>
-
 
       {/* Nội dung chat */}
       <div className="chat-content">
@@ -295,9 +294,14 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
                 Gửi
               </button>
               <button className="file-upload-label">
-                <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+                <input
+                  type="file"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
               </button>
-              <button className="file-upload-button" onClick={handleSendFile}>Gửi file</button>
+              <button className="file-upload-button" onClick={handleSendFile}>
+                Gửi file
+              </button>
             </div>
           </div>
         )}
@@ -313,10 +317,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
             </button>
           )}
           {user.roleID === 1 && !isCompleted && (
-            <button
-              className="end-button"
-              onClick={() => setEndOpen(true)}
-            >
+            <button className="end-button" onClick={() => setEndOpen(true)}>
               Kết thúc
             </button>
           )}
