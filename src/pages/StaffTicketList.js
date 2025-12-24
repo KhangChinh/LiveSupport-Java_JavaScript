@@ -106,7 +106,7 @@ const StaffTicketList = () => {
                             setSearch(e.target.value);
                             setPage(1);
                         }}
-                        placeholder="Tìm kiếm theo mô tả hoặc tên phòng..."
+                        placeholder="Tìm kiếm theo tên phòng..."
                     />
                 </div>
                 <div className="col-md-3">
@@ -166,7 +166,7 @@ const StaffTicketList = () => {
                                         <td>{ticket.ticketDescription || '—'}</td>
                                         <td>{getStatusBadge(ticket.ticketStatusID)}</td>
                                         <td>
-                                            {ticket.ticketStatusID === 1 && (
+                                            {ticket.ticketStatusID === 1 ? (
                                                 <div className="d-flex gap-2">
                                                     <button
                                                         className="btn btn-sm btn-success"
@@ -181,7 +181,7 @@ const StaffTicketList = () => {
                                                         <i className="bi bi-x-circle me-1"></i> Từ chối
                                                     </button>
                                                 </div>
-                                            )}
+                                            ) : null}
                                             {ticket.roomID && ticket.ticketStatusID === 2 ? (
                                                 <Link
                                                     to={`/chat/${ticket.roomID}`}
