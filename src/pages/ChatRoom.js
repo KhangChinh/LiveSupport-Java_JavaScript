@@ -10,8 +10,8 @@ import {
   loadHistory,
 } from "../services/MessageService";
 import { getTransferStaff, transferTicket } from "../services/TicketService";
-import { renameRoom, getRoomById } from "../services/RoomService";
-import { getTicket, endTicket } from "../services/TicketService";
+import { renameRoom, getRoomById, } from "../services/RoomService";
+import { endTicket } from "../services/TicketService";
 import socket from "../services/SocketService";
 import { useSnackbar } from "notistack";
 import "./ChatRoom.scss";
@@ -23,10 +23,7 @@ const getExtension = (fileName) => {
 
 const ChatRoom = ({ onBack, showBackButton = false }) => {
   const { roomId } = useParams();
-  const { user, authenticated } = useSelector((state) => ({
-    user: state.user,
-    authenticated: state.authenticated,
-  }));
+  const user = useSelector((state) => state.user);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const messagesEndRef = useRef(null);
@@ -44,14 +41,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
   const [ratingDesc, setRatingDesc] = useState("");
   const [ticketID, setTicketID] = useState(null);
   const [isEditingRoomName, setIsEditingRoomName] = useState(false);
-  
-  const isCustomer = user?.roleID === 1; // 'C' Khách hàng
-  const isStaffOrAdmin = user?.roleID === 2 || user?.roleID === 3; // 'A' Admin hoặc 'S' Hỗ trợ viên
-  
   useEffect(() => {
-    if (!authenticated) {
-      return; 
-    }
     console.log("Fetching room info for", roomId);
     getRoomById(
       { roomID: roomId },
@@ -59,19 +49,6 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
         success: (room) => {
           setRoomName(room.roomName);
           setTicketID(room.ticketID);
-          if (room.ticketID) {
-            getTicket(
-              { ticketID: room.ticketID },
-              {
-                success: (ticket) => {
-                  if (ticket.ticketStatusID === 4) {
-                    setIsCompleted(true);
-                  }
-                },
-                error: (msg) => enqueueSnackbar(msg, { variant: "error" }),
-              }
-            );
-          }
         },
         error: (msg) => {
           enqueueSnackbar(msg, { variant: "error" });
@@ -91,20 +68,17 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
         },
       }
     );
-    
+
     socket.on("receiveMessage", (msg) => {
       console.log("Received message", msg);
       setMessages((prev) => [...prev, msg]);
     });
-    socket.on("roomRenamed", (data) => setRoomName(data.newName)); 
-    socket.on("ticketCompleted", () => {
-      setIsCompleted(true);
-      enqueueSnackbar("Ticket đã hoàn tất", { variant: "success" });
-    });
+    socket.on("roomRenamed", (data) => setRoomName(data.newName));
     socket.on("ticketTransferred", () => {
-      enqueueSnackbar("Ticket đã được chuyển tiếp", { variant: "info" });
+      enqueueSnackbar("Ticket transferred, access lost", { variant: "info" });
       navigate("/dashboard");
     });
+    socket.on("ticketCompleted", () => setIsCompleted(true));
 
     return () => {
       socket.off("receiveMessage");
@@ -112,7 +86,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
       socket.off("ticketTransferred");
       socket.off("ticketCompleted");
     };
-  }, [authenticated, roomId, navigate, enqueueSnackbar]);
+  }, [roomId, navigate, enqueueSnackbar]);
 
   const handleSendMessage = () => {
     if (message.trim()) {
@@ -266,10 +240,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
               />
               <button
                 className="save-button"
-                onClick={() => {
-                  handleRename();
-                  setIsEditingRoomName(false);
-                }}
+                onClick={handleRename && (() => setIsEditingRoomName(false))}
               >
                 Lưu
               </button>
@@ -369,7 +340,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
 
         {/* Nút chức năng */}
         <div className="action-bar">
-          {user?.roleID !== 1 && !isCompleted && (
+          {user.roleID !== 1 && !isCompleted && (
             <button
               className="transfer-button"
               onClick={() => setTransferOpen(true)}
@@ -377,7 +348,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
               Chuyển tiếp
             </button>
           )}
-          {user?.roleID === 1 && !isCompleted && (
+          {user.roleID === 1 && !isCompleted && (
             <button className="end-button" onClick={() => setEndOpen(true)}>
               Kết thúc
             </button>
