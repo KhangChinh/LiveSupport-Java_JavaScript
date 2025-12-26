@@ -178,11 +178,12 @@ const Navbar = () => {
                   <div className={`dropdown-menu dropdown-menu-end show shadow ${styles.dropdownMenu}`}
                     style={{ marginLeft: '-250px', width: '430px' }}>
                     <div className={`dropdown-header ${styles.dropdownHeader}`}>
-                      <strong>Thông báo</strong>
+                      <strong className="label">Thông báo</strong>
                       {notifications.length > 0 && (
                         <button
-                          className="btn btn-sm btn-link text-danger p-0"
+                          className="btn-clear btn-sm btn-link text-danger p-0"
                           onClick={handleClearAllNotifications}
+                          style={{ alignItems: 'center', marginLeft: '260px' }}
                         >
                           Xóa hết
                         </button>
@@ -197,10 +198,10 @@ const Navbar = () => {
                       notifications.map((noti, idx) => (
                         <div
                           key={idx}
-                          className={`dropdown-item border-bottom py-3 ${styles.notificationItem}`}
+                          className="dropdown-item border-bottom py-3 position-relative"
+                          style={{ minHeight: '70px' }}
                         >
-                          <div className="d-flex justify-content-between align-items-start"
-                            style={{ height: '40px' }}>
+                          <div className="d-flex justify-content-between align-items-start">
                             {/* Phần nội dung chính (mô tả) */}
                             <div className="pe-5"> {/* pe-5 để chừa chỗ nếu mô tả dài */}
                               {noti.notificationDescription}

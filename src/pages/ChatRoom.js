@@ -26,7 +26,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
   const user = useSelector((state) => state.user);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
-  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -240,7 +240,10 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
               />
               <button
                 className="save-button"
-                onClick={handleRename && (() => setIsEditingRoomName(false))}
+                onClick={() => {
+                  handleRename();                    // Gọi API đổi tên
+                  setIsEditingRoomName(false);       // Thoát chế độ chỉnh sửa
+                }}
               >
                 Lưu
               </button>
@@ -255,6 +258,22 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
               </button>
             </>
           )}
+          {/* Nút chức năng */}
+          <div className="action-bar">
+            {user.roleID !== 1 && !isCompleted && (
+              <button
+                className="transfer-button"
+                onClick={() => setTransferOpen(true)}
+              >
+                Chuyển tiếp
+              </button>
+            )}
+            {user.roleID === 1 && !isCompleted && (
+              <button className="end-button" onClick={() => setEndOpen(true)}>
+                Kết thúc
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -264,9 +283,8 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`message-bubble ${
-                msg.senderID === user.accountID ? "sent" : "received"
-              }`}
+              className={`message-bubble ${msg.senderID === user.accountID ? "sent" : "received"
+                }`}
             >
               <div className="message-content">
                 <Linkify
@@ -312,6 +330,20 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
         {/* Input và nút gửi */}
         {!isCompleted && (
           <div className="input-area">
+            {file && (
+              <div className="selected-file-preview">
+                <span className="file-name">{file.name}</span>
+                <button
+                  type="button"
+                  className="remove-file-btn bg-danger rounded-pill"
+                  onClick={() => setFile(null)}
+                  title="Xóa file"
+                  style={{ background: "red", color: "white", border: "50%" }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
             <input
               className="message-input"
               value={message}
@@ -337,71 +369,143 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
             </button>
           </div>
         )}
-
-        {/* Nút chức năng */}
-        <div className="action-bar">
-          {user.roleID !== 1 && !isCompleted && (
-            <button
-              className="transfer-button"
-              onClick={() => setTransferOpen(true)}
-            >
-              Chuyển tiếp
-            </button>
-          )}
-          {user.roleID === 1 && !isCompleted && (
-            <button className="end-button" onClick={() => setEndOpen(true)}>
-              Kết thúc
-            </button>
-          )}
-        </div>
       </div>
 
-      {/* Modal Chuyển tiếp */}
       {transferOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h5>Chuyển tiếp ticket</h5>
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm nhân viên..."
-            />
-            <button onClick={handleSearchStaff}>Tìm</button>
-            <ul className="staff-list">
-              {staffList.map((s) => (
-                <li
-                  key={s.accountID}
-                  onClick={() => handleTransfer(s.accountID)}
+        <div className="modal-overlay" onClick={() => setTransferOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}
+            style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
+            <div className="modal-header">
+              <h5>Chuyển tiếp ticket</h5>
+              <button
+                className="close-btn"
+                onClick={() => setTransferOpen(false)}
+                aria-label="Đóng"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="search-container">
+                <input
+                  type="text"
+                  className="search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm theo tên hoặc email..."
+                  autoFocus
+                />
+                <button
+                  className="search-btn"
+                  onClick={handleSearchStaff}
+                  disabled={!searchQuery.trim()}
                 >
-                  {s.accountName}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => setTransferOpen(false)}>Hủy</button>
+                  Tìm
+                </button>
+              </div>
+
+              <div className="staff-list-container">
+                {staffList.length === 0 ? (
+                  <p className="no-result">Không tìm thấy nhân viên phù hợp</p>
+                ) : (
+                  <ul className="staff-list">
+                    {staffList.map((staff) => (
+                      <li
+                        key={staff.accountID}
+                        className="staff-item"
+                        onClick={() => handleTransfer(staff.accountID)}
+                      >
+                        <div className="staff-info">
+                          {/* Nếu có avatar, thêm vào đây */}
+                          <span className="staff-name">{staff.accountName}</span>
+                          {staff.email && (
+                            <span className="staff-email">{staff.email}</span>
+                          )}
+                          {staff.roleName && (
+                            <span className="staff-role">{staff.roleName}</span>
+                          )}
+                        </div>
+                        <span className="transfer-icon">→</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setTransferOpen(false)}
+                style={{ padding: '8px' }}
+              >
+                Hủy
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Modal Kết thúc */}
       {endOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h5>Kết thúc ticket</h5>
-            <label>Đánh giá (1-5):</label>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              value={ratingPoint}
-              onChange={(e) => setRatingPoint(e.target.value)}
-            />
-            <textarea
-              value={ratingDesc}
-              onChange={(e) => setRatingDesc(e.target.value)}
-              placeholder="Mô tả đánh giá..."
-            />
-            <button onClick={handleEnd}>Xác nhận</button>
-            <button onClick={() => setEndOpen(false)}>Hủy</button>
+        <div className="modal-overlay" onClick={() => setEndOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}
+            style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
+            <div className="modal-header">
+              <h5>Kết thúc ticket</h5>
+              <button
+                className="close-btn"
+                onClick={() => setEndOpen(false)}
+                aria-label="Đóng"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p className="warning-text">
+                Bạn có chắc chắn muốn kết thúc ticket này?
+              </p>
+
+              <div className="rating-section">
+                <label>Đánh giá chất lượng hỗ trợ:</label>
+                <div className="star-rating">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`star ${ratingPoint >= star ? 'active' : ''}`}
+                      onClick={() => setRatingPoint(star)}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <textarea
+                className="feedback-textarea"
+                value={ratingDesc}
+                onChange={(e) => setRatingDesc(e.target.value)}
+                placeholder="Nhập mô tả đánh giá (không bắt buộc)..."
+                rows={4}
+              />
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setEndOpen(false)}
+              >
+                Hủy
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleEnd}
+                disabled={ratingPoint < 1 || ratingPoint > 5}
+              >
+                Kết thúc ticket
+              </button>
+            </div>
           </div>
         </div>
       )}
