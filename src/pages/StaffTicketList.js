@@ -1,6 +1,5 @@
 // src/pages/StaffTicketList.js
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getMyTickets, acceptTicket, rejectTicket, getMyTicketsCount } from '../services/TicketService';
 import socket from '../services/SocketService';
 import { Link } from 'react-router-dom';
@@ -8,7 +7,6 @@ import { useSnackbar } from 'notistack';
 import styles from './StaffTicketList.scss';
 
 const StaffTicketList = () => {
-    const user = useSelector((state) => state.user);
     const { enqueueSnackbar } = useSnackbar();
     const [tickets, setTickets] = useState([]);
     const [total, setTotal] = useState(0);
@@ -19,7 +17,7 @@ const StaffTicketList = () => {
     const [page, setPage] = useState(1);
     const limit = 10;
 
-    const fetchTickets = async () => {
+    const fetchTickets = useCallback(async () => {
         setLoading(true);
         try {
             await getMyTickets({ filterStatus: filterStatus || '', search, sort, page, limit }, setTickets);
@@ -29,14 +27,14 @@ const StaffTicketList = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterStatus, search, sort, page]);
 
     useEffect(() => {
         fetchTickets();
 
         const handleTicketUpdate = () => fetchTickets();
         socket.on('ticketTransferred', handleTicketUpdate);
-        socket.on('ticketAccepted', handleTicketUpdate); // Nếu staff khác accept thì update
+        socket.on('ticketAccepted', handleTicketUpdate);
         socket.on('ticketRejected', handleTicketUpdate);
         socket.on('ticketCompleted', handleTicketUpdate);
 
@@ -46,7 +44,7 @@ const StaffTicketList = () => {
             socket.off('ticketRejected', handleTicketUpdate);
             socket.off('ticketCompleted', handleTicketUpdate);
         };
-    }, [filterStatus, search, sort, page]);
+    }, [fetchTickets]);
 
     const handleAccept = (ticketID) => {
         acceptTicket(
@@ -96,8 +94,7 @@ const StaffTicketList = () => {
                 </div>
             </div>
 
-            {/* Filter & Search */}
-            <div className={`row g-3 mb-4 ${styles.filterRow}`}>
+            <div className="row g-3 mb-4">
                 <div className="col-md-5">
                     <input
                         className="form-control form-control-lg"
@@ -106,7 +103,7 @@ const StaffTicketList = () => {
                             setSearch(e.target.value);
                             setPage(1);
                         }}
-                        placeholder="Tìm kiếm theo tên phòng..."
+                        placeholder="Tìm kiếm theo mô tả..."
                     />
                 </div>
                 <div className="col-md-3">
@@ -202,7 +199,6 @@ const StaffTicketList = () => {
                         </table>
                     </div>
 
-                    {/* Pagination */}
                     {totalPages > 1 && (
                         <nav aria-label="Page navigation" className="mt-4">
                             <ul className="pagination justify-content-center">

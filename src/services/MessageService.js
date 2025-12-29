@@ -5,10 +5,19 @@ export const sendMessage = (data) => {
     socket.emit('sendMessage', data);
 };
 
-export const sendFile = (data) => {
-    socket.emit('sendFile', data);
+export const sendFile = (data, callbacks = {}) => {
+  socket.emit('sendFile', data, (response) => {
+    if (response && response.success) {
+      if (typeof callbacks.success === 'function') {
+        callbacks.success(response.message);
+      }
+    } else {
+      if (typeof callbacks.error === 'function') {
+        callbacks.error(response?.error || 'Failed to send file');
+      }
+    }
+  });
 };
-
 export const loadHistory = (data, callback) => {
     socket.emit('loadHistory', data);
     socket.once('historyMessages', callback);

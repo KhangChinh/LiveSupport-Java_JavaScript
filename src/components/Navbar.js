@@ -1,19 +1,19 @@
 // src/components/Navbar/Navbar.jsx
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Link, useLocation, useNavigate } from "react-router-dom"; // Thêm useLocation
+import { Link, useLocation, useNavigate } from "react-router-dom"; 
 import { logout } from "../services/AccountService";
 import { getMyNotifications, clearAllNotifications } from "../services/NotificationService";
 import socket from "../services/SocketService";
 
-import styles from "./Navbar.module.scss"; // Đổi tên file SCSS thành module cho scoped styles
+import styles from "./Navbar.module.scss";
 
 const Navbar = () => {
   const user = useSelector((state) => state.user);
   const notifications = useSelector((state) => state.notifications);
   const dispatch = useDispatch();
   const location = useLocation();
-  const navigate = useNavigate();// Để kiểm tra trang hiện tại
+  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   useEffect(() => {
@@ -28,12 +28,14 @@ const Navbar = () => {
     }
   }, [user, dispatch]);
 
-  const handleLogout = () => {
+const handleLogout = () => {
+  if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
     logout();
     dispatch({ type: "LOGOUT" });
     localStorage.removeItem("user");
     localStorage.removeItem("sessionId");
-  };
+  }
+};
 
   const toggleNotifications = () => {
     setShowNotifications((prev) => !prev);
@@ -42,13 +44,10 @@ const Navbar = () => {
   const getLinkClass = (targetPath) => {
     const isCurrent = location.pathname === targetPath;
 
-    // Nếu đang hover bất kỳ link nào, thì KHÔNG áp dụng active thật cho link hiện tại
     if (isCurrent && !isHovering) {
       return styles.active;
     }
 
-    // Nếu đang hover chính link này → áp dụng hoverActive
-    // (ở đây ta sẽ xử lý hoverActive qua onMouseEnter/Leave riêng)
     return "";
   };
   const handleClearAllNotifications = () => {

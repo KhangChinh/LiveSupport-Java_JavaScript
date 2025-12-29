@@ -1,13 +1,11 @@
 // File: src/pages/Login.js
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { login, register } from "../services/AccountService";
-import { Link } from "react-router-dom";
-import socket from "../services/SocketService";
 import { useSnackbar } from "notistack";
-import { ToastContainer, toast, Slide } from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import { IonIcon } from "@ionic/react";
 import {
   keyOutline,

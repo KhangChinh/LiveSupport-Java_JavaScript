@@ -1,9 +1,17 @@
+.navLink,
+.logoutBtn,
+.notificationItem,
+.dropdownMenu,
+.notificationBtn {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
 .header {
-    background-color: #0a0e17; // Nền tối
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+  background-color: #111827; // dark gray thay vì #0a0e17
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3); // shadow nhẹ hơn
 }
 
 .navbar {
@@ -50,53 +58,21 @@
 }
 
 .navLink {
-    color: #d0d8e0;
-    font-weight: 500;
-    padding: 0.6rem 1.2rem !important;
-    transition: all 0.3s ease;
-    position: relative;
-    margin-left: 20px;
+  color: #d1d5db;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 
-    &:hover {
-        color: #000000;
-        background: rgb(255, 255, 255);
-        border-radius: 6px;
+  &:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+  }
 
-
-        &::after {
-            content: "";
-            position: absolute;
-            bottom: -2px;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #4fc3f7, #ffffff);
-            transform: translateX(-50%);
-            transition: width 0.3s ease;
-        }
-    }
-
-    &.active {
-        color: #000000;
-        background: rgb(255, 255, 255);
-        border-radius: 6px;
-
-        &::after {
-            content: "";
-            position: absolute;
-            bottom: -2px;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #4fc3f7, #ffffff);
-            transform: translateX(-50%);
-            transition: width 0.3s ease;
-        }
-
-        &:hover::after {
-            width: 70%;
-        }
-    }
+  &.active {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-weight: 600;
+  }
 }
 
 .notificationBtn {
@@ -120,48 +96,83 @@
 }
 
 .dropdownMenu {
-    background-color: #010102;
-    border: none;
-    border-radius: 8px;
-    min-width: 340px;
-    max-height: 420px;
-    overflow-y: auto;
-    box-shadow: 0 0px 24px rgba(0, 0, 0, 0.4);
+  background-color: #1f2937; // xám tối hiện đại, dễ nhìn hơn #010102
+  border: none;
+  border-radius: 12px;
+  min-width: 380px;
+  max-height: 480px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  margin-top: 8px; // cách nút chuông một chút để đẹp hơn
 
-    .dropdownHeader {
-        background-color: #0f1624;
-        color: #ffffff;
-        font-weight: 600;
+  .dropdownHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background-color: #111827;
+    border-bottom: 1px solid #374151;
+    color: #f3f4f6;
+    font-weight: 600;
+    font-size: 1rem;
+    position: sticky; // header dính trên cùng khi scroll
+    top: 0;
+    z-index: 1;
 
-        padding-bottom: 20px;
-        border-bottom: 1px solid #2a344f;
+    strong {
+      font-weight: 600;
     }
 
-    .dropdown-item {
-        color: #d0d8e0;
-        padding: 0.9rem 1.25rem;
-        border-bottom: 1px solid #2a344f;
+    button {
+      color: #ef4444; // đỏ nhạt hơn, dễ nhìn
+      font-size: 0.875rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      transition: background 0.2s ease;
 
-        &:last-child {
-            border-bottom: none;
-        }
+      &:hover {
+        background: rgba(239, 68, 68, 0.15);
+      }
+    }
+  }
 
-        &:hover {
-            background-color: #28344a;
-            color: #ffffff;
-        }
+  .dropdown-item {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #374151;
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    position: relative;
+    transition: background 0.2s ease;
+
+    &:last-child {
+      border-bottom: none;
     }
 
-    .emptyMessage {
-        color: #8da2c0;
-        font-style: italic;
+    &:hover {
+      background-color: #374151;
     }
-}
+  }
 
-.notificationItem {
-    user-select: none;
-    pointer-events: none;
-    cursor: default;
+  .notificationContent {
+    margin-right: 90px; // chừa chỗ cho thời gian ở góc phải dưới
+    line-height: 1.4;
+  }
+
+  .notificationTime {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 1.25rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .emptyMessage {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    font-size: 0.95rem;
+  }
 }
 
 .logoutBtn {

@@ -1,6 +1,5 @@
 // src/pages/CreateTicket.jsx
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
 import { getRoles, getStaffByRole } from '../services/AccountService';

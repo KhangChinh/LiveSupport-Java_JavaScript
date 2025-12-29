@@ -1,10 +1,10 @@
 // src/pages/TicketList.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { getMyTickets, getMyTicketsCount } from '../services/TicketService';
 import socket from '../services/SocketService';
 import { Link } from 'react-router-dom';
-import styles from './TicketList.scss'; // Import SCSS module
+import styles from './TicketList.scss';
 
 const TicketList = () => {
     const user = useSelector((state) => state.user);
@@ -17,7 +17,7 @@ const TicketList = () => {
     const [page, setPage] = useState(1);
     const limit = 10;
 
-    const fetchTickets = async () => {
+    const fetchTickets = useCallback(async () => {
         setLoading(true);
         try {
             await getMyTickets({ filterStatus: filterStatus || '', search, sort, page, limit }, setTickets);
@@ -27,7 +27,7 @@ const TicketList = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterStatus, search, sort, page]);
 
     useEffect(() => {
         fetchTickets();
@@ -44,7 +44,7 @@ const TicketList = () => {
             socket.off('ticketTransferred', handleTicketUpdate);
             socket.off('ticketCompleted', handleTicketUpdate);
         };
-    }, [filterStatus, search, sort, page]);
+    }, [fetchTickets]);
 
     if (user.roleID !== 1) {
         return <div className="alert alert-danger text-center mt-5">Unauthorized</div>;
@@ -72,7 +72,6 @@ const TicketList = () => {
                 </div>
             </div>
 
-
             <div className="row g-3 mb-4">
                 <div className="col-md-5">
                     <input
@@ -80,7 +79,7 @@ const TicketList = () => {
                         value={search}
                         onChange={(e) => {
                             setSearch(e.target.value);
-                            setPage(1); // Reset về trang 1 khi tìm kiếm
+                            setPage(1);
                         }}
                         placeholder="Tìm kiếm theo tên phòng hoặc mô tả..."
                     />
@@ -113,7 +112,6 @@ const TicketList = () => {
                 </div>
             </div>
 
-
             {loading ? (
                 <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status">
@@ -143,12 +141,15 @@ const TicketList = () => {
                                         <td>{ticket.ticketDescription || '—'}</td>
                                         <td>{getStatusBadge(ticket.ticketStatusID)}</td>
                                         <td>
-                                            {ticket.roomID && ticket.ticketStatusID === 2 ? (
+                                            {ticket.roomID ? (
                                                 <Link
                                                     to={`/chat/${ticket.roomID}`}
                                                     className="btn btn-sm btn-outline-primary"
                                                 >
-                                                    <i className="bi bi-chat-dots me-1"></i> Chat
+                                                    <i className="bi bi-chat-dots me-1"></i>
+                                                    {ticket.ticketStatusID === 2
+                                                        ? 'Chat'
+                                                        : 'Xem lịch sử'}
                                                 </Link>
                                             ) : (
                                                 <span className="text-muted">Chưa có đoạn chat</span>
@@ -160,7 +161,6 @@ const TicketList = () => {
                         </table>
                     </div>
 
-                    {/* Pagination */}
                     {totalPages > 1 && (
                         <nav aria-label="Page navigation" className="mt-4">
                             <ul className="pagination justify-content-center">

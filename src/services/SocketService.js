@@ -21,7 +21,6 @@ socket.on("disconnect", () => {
 socket.on("logoutSuccess", () => {
   localStorage.removeItem("sessionId");
   localStorage.removeItem("user");
-  // dispatch LOGOUT if needed
 });
 
 export default socket;

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import HistoryList from "./HistoryList";
 import ChatRoom from "../pages/ChatRoom";
@@ -10,9 +9,16 @@ const ChatLayout = () => {
     const navigate = useNavigate();
     const [selectedRoomId, setSelectedRoomId] = useState(urlRoomId || null);
 
+    useEffect(() => {
+        if (urlRoomId) {
+            setSelectedRoomId(urlRoomId);
+        } else {
+            setSelectedRoomId(null);
+        }
+    }, [urlRoomId]);
+
     const handleSelectRoom = (roomId) => {
         setSelectedRoomId(roomId);
-        // Cập nhật URL để hỗ trợ refresh hoặc chia sẻ link
         navigate(`/chat/${roomId}`, { replace: true });
     };
 

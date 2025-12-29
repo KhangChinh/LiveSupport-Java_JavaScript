@@ -50,7 +50,7 @@ export const getTransferStaff = (data, callback) => {
   socket.once("transferStaff", callback);
 };
 export const getRatingStats = (callback) => {
-  socket.emit("getRatingStats", {}); // Không cần truyền data, server tự lấy từ session
+  socket.emit("getRatingStats", {}); 
   socket.once("ratingStats", callback.success);
   socket.once("getRatingStatsError", callback.error);
 };
