@@ -48,7 +48,7 @@ public class RoomService {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
             try {
-                String sql = "SELECT r.* FROM Room r JOIN Ticket t ON r.TicketID = t.TicketID WHERE " +
+                String sql = "SELECT r.*, t.TicketStatusID FROM Room r LEFT JOIN Ticket t ON r.TicketID = t.TicketID WHERE " +
                         "(t.CustomerID = ? OR t.StaffID = ?) " +
                         (search != null ? " AND r.RoomName LIKE ?" : "") +
                         " ORDER BY " + (sort != null ? sort : "r.LastMessageTime DESC") +
@@ -61,7 +61,7 @@ public class RoomService {
                     pstmt.setString(paramIndex++, "%" + search + "%");
                 }
                 pstmt.setInt(paramIndex++, limit);
-                pstmt.setInt(paramIndex, (page - 1) * limit);
+                pstmt.setInt(paramIndex++, (page - 1) * limit);
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {
                     Room room = new Room();
@@ -70,6 +70,7 @@ public class RoomService {
                     room.setTicketID(rs.getInt("TicketID"));
                     room.setLastMessage(rs.getString("LastMessage"));
                     room.setLastMessageTime(rs.getTimestamp("LastMessageTime"));
+                    room.setTicketStatusID(rs.getInt("TicketStatusID"));
                     rooms.add(room);
                 }
             } catch (SQLException e) {
@@ -85,12 +86,12 @@ public class RoomService {
         return rooms;
     }
 
-    public int getRoomsCount(int accountID, int roleID, String search) {
+    public int getMyRoomsCount(int accountID, int roleID, String search) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
             try {
-                String sql = "SELECT COUNT(*) FROM Room r JOIN Ticket t ON r.TicketID = t.TicketID WHERE " +
-                        "(t.CustomerID = ? OR t.StaffID = ?) " +
+                String sql = "SELECT COUNT(*) FROM Room r LEFT JOIN Ticket t ON r.TicketID = t.TicketID WHERE " +
+                        "(t.CustomerID = ? OR t.StaffID = ?)" +
                         (search != null ? " AND r.RoomName LIKE ?" : "");
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 int paramIndex = 1;
@@ -116,10 +117,7 @@ public class RoomService {
         return 0;
     }
 
-    public boolean renameRoom(int roomID, String newName) {
-        if (newName == null || newName.isEmpty() || newName.length() > 30) {
-            return false; // Validation
-        }
+    public void renameRoom(int roomID, String newName) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
             try {
@@ -127,8 +125,7 @@ public class RoomService {
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, newName);
                 pstmt.setInt(2, roomID);
-                int rows = pstmt.executeUpdate();
-                return rows > 0;
+                pstmt.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
@@ -139,17 +136,16 @@ public class RoomService {
                 }
             }
         }
-        return false;
     }
 
-    public void updateLastMessage(int roomID, String lastMessage, Timestamp time) {
+    public void updateLastMessage(int roomID, String lastMessage, Timestamp lastMessageTime) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
             try {
                 String sql = "UPDATE Room SET LastMessage = ?, LastMessageTime = ? WHERE RoomID = ?";
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, lastMessage);
-                pstmt.setTimestamp(2, time);
+                pstmt.setTimestamp(2, lastMessageTime);
                 pstmt.setInt(3, roomID);
                 pstmt.executeUpdate();
             } catch (SQLException e) {
@@ -164,7 +160,7 @@ public class RoomService {
         }
     }
 
-    public Room getRoomByTicket(int ticketID) {
+    public Room getRoomByTicketID(int ticketID) {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
             try {
@@ -198,7 +194,7 @@ public class RoomService {
         Connection conn = DatabaseManager.getConnection();
         if (conn != null) {
             try {
-                String sql = "SELECT * FROM Room WHERE RoomID = ?";
+                String sql = "SELECT r.*, t.TicketStatusID FROM Room r LEFT JOIN Ticket t ON r.TicketID = t.TicketID WHERE r.RoomID = ?";
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setInt(1, roomID);
                 ResultSet rs = pstmt.executeQuery();
@@ -209,6 +205,7 @@ public class RoomService {
                     room.setTicketID(rs.getInt("TicketID"));
                     room.setLastMessage(rs.getString("LastMessage"));
                     room.setLastMessageTime(rs.getTimestamp("LastMessageTime"));
+                    room.setTicketStatusID(rs.getInt("TicketStatusID"));
                     return room;
                 }
             } catch (SQLException e) {

@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import com.livechat.model.RatingStats;
 
+
 public class Main {
     private static final Map<UUID, SocketIOClient> clientsMap = new HashMap<>();
     private static final Map<UUID, Account> clientAccounts = new HashMap<>();
@@ -79,14 +80,22 @@ public class Main {
     private static FileService fileService = new FileService();
     private static String FILE_FOLDER;
     private static final long SESSION_EXPIRE_MS = 3600 * 1000; // 1 hour
+    private static final long MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
     public static void main(String[] args) {
         Properties props = ConfigUtil.loadConfig();
         DatabaseManager.init(props);
         BcryptUtil.init(props.getProperty("bcrypt.salt"));
-        FileUtil.init(props.getProperty("file.folder"));
-        FILE_FOLDER = props.getProperty("file.folder");
-        new File(FILE_FOLDER).mkdirs();
+
+        FileUtil.init(
+            props.getProperty("file.folder"),
+            props.getProperty("cloudinary.cloud-name"),
+            props.getProperty("cloudinary.api-key"),
+            props.getProperty("cloudinary.api-secret")
+        );
+
+    FILE_FOLDER = props.getProperty("file.folder");
+    new File(FILE_FOLDER).mkdirs();
 
         // Session expire scheduler
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -98,6 +107,8 @@ public class Main {
         Configuration config = new Configuration();
         config.setHostname(props.getProperty("socket.host"));
         config.setPort(Integer.parseInt(props.getProperty("socket.port")));
+        config.setMaxFramePayloadLength(52428800); // 50MB
+        config.setMaxHttpContentLength(52428800);  // 50MB
         SocketIOServer server = new SocketIOServer(config);
 
         server.addConnectListener(new ConnectListener() {
@@ -525,7 +536,7 @@ public class Main {
         server.addEventListener("getMyRoomsCount", GetMyRoomsRequest.class, (client, data, ack) -> {
             Account current = clientAccounts.get(client.getSessionId());
             if (current != null) {
-                int count = roomService.getRoomsCount(current.getAccountID(), current.getRoleID(), data.getSearch());
+                int count = roomService.getMyRoomsCount(current.getAccountID(), current.getRoleID(), data.getSearch());
                 client.sendEvent("myRoomsCount", count);
             } else {
                 client.sendEvent("getMyRoomsCountError", "Unauthorized");
@@ -534,24 +545,28 @@ public class Main {
 
         server.addEventListener("renameRoom", RenameRoomRequest.class, (client, data, ack) -> {
             Account current = clientAccounts.get(client.getSessionId());
-            if (current != null) {
-                Room room = roomService.getRoomById(data.getRoomID());
-                if (room != null) {
-                    Ticket ticket = ticketService.getTicketById(room.getTicketID());
-                    if (ticket != null && (ticket.getCustomerID() == current.getAccountID() || ticket.getStaffID() == current.getAccountID())) {
-                        boolean success = roomService.renameRoom(data.getRoomID(), data.getNewName());
-                        if (success) {
-                            client.sendEvent("renameRoomSuccess", data.getNewName());
-                            int otherID = ticket.getCustomerID() == current.getAccountID() ? ticket.getStaffID() : ticket.getCustomerID();
-                            sendToUser(server, otherID, "roomRenamed", data);
-                            return;
-                        }
-                    }
-                }
-                client.sendEvent("renameRoomError", "Error renaming room or unauthorized");
-            } else {
+            if (current == null) {
                 client.sendEvent("renameRoomError", "Unauthorized");
+                return;
             }
+            Room room = roomService.getRoomById(data.getRoomID());
+            if (room == null) {
+                client.sendEvent("renameRoomError", "Room not found");
+                return;
+            }
+            Ticket ticket = ticketService.getTicketById(room.getTicketID());
+            if (ticket == null || 
+                (ticket.getCustomerID() != current.getAccountID() && 
+                 ticket.getStaffID() != current.getAccountID())) {
+                client.sendEvent("renameRoomError", "Unauthorized or room not found");
+                return;
+            }
+            roomService.renameRoom(data.getRoomID(), data.getNewName());
+            client.sendEvent("renameRoomSuccess", data.getNewName());
+            int otherID = (ticket.getCustomerID() == current.getAccountID()) 
+                          ? ticket.getStaffID() 
+                          : ticket.getCustomerID();
+            sendToUser(server, otherID, "roomRenamed", data);
         });
 
         server.addEventListener("getMyNotifications", String.class, (client, data, ack) -> {
@@ -606,7 +621,7 @@ public class Main {
                  @Override
                  protected void initChannel(SocketChannel ch) {
                      ch.pipeline().addLast(new HttpRequestDecoder());
-                     ch.pipeline().addLast(new HttpObjectAggregator(65536));
+                     ch.pipeline().addLast(new HttpObjectAggregator(52428800));
                      ch.pipeline().addLast(new HttpResponseEncoder());
                      ch.pipeline().addLast(new ChunkedWriteHandler());
                      ch.pipeline().addLast(new StaticFileHandler(FILE_FOLDER));
@@ -659,9 +674,9 @@ public class Main {
             this.rootDir = rootDir;
         }
 
-        @Override
-        protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-            if (request.method().equals(HttpMethod.OPTIONS)) {
+@Override
+protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
+    if (request.method().equals(HttpMethod.OPTIONS)) {
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
         response.headers().set("Access-Control-Allow-Origin", "*");
         response.headers().set("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -693,45 +708,47 @@ public class Main {
         sendError(ctx, HttpResponseStatus.NOT_FOUND);
         return;
     }   
-            RandomAccessFile raf;
-            try {
-                raf = new RandomAccessFile(file, "r");
-            } catch (IOException ignore) {
-                sendError(ctx, HttpResponseStatus.NOT_FOUND);
-                return;
-            }
-            long fileLength = raf.length();
-            FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-            HttpUtil.setContentLength(response, fileLength);
-            setContentTypeHeader(response, file);
-            response.headers().set("Access-Control-Allow-Origin", "*");
-            response.headers().set("Access-Control-Allow-Methods", "GET, OPTIONS");
-            response.headers().set("Access-Control-Allow-Headers", "Content-Type");
-            if (HttpUtil.isKeepAlive(request)) {
-                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-            }
-            ctx.write(response);
-            ChannelFuture sendFileFuture = ctx.write(new HttpChunkedInput(new ChunkedFile(raf, 0, fileLength, 8192)), ctx.newProgressivePromise());
-            sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
-                @Override
-                public void operationProgressed(ChannelProgressiveFuture future, long progress, long total) {
-                    if (total < 0) {
-                        System.err.println(future.channel() + " Transfer progress: " + progress);
-                    } else {
-                        System.err.println(future.channel() + " Transfer progress: " + progress + " / " + total);
-                    }
-                }
-
-                @Override
-                public void operationComplete(ChannelProgressiveFuture future) {
-                    System.err.println(future.channel() + " Transfer complete.");
-                }
-            });
-            ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-            if (!HttpUtil.isKeepAlive(request)) {
-                lastContentFuture.addListener(ChannelFutureListener.CLOSE);
+    RandomAccessFile raf;
+    try {
+        raf = new RandomAccessFile(file, "r");
+    } catch (IOException ignore) {
+        sendError(ctx, HttpResponseStatus.NOT_FOUND);
+        return;
+    }
+    long fileLength = raf.length();
+    FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+    HttpUtil.setContentLength(response, fileLength);
+    setContentTypeHeader(response, file);
+    // NEW: Add Content-Disposition header to force download
+    response.headers().set(HttpHeaderNames.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"");
+    response.headers().set("Access-Control-Allow-Origin", "*");
+    response.headers().set("Access-Control-Allow-Methods", "GET, OPTIONS");
+    response.headers().set("Access-Control-Allow-Headers", "Content-Type");
+    if (HttpUtil.isKeepAlive(request)) {
+        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+    }
+    ctx.write(response);
+    ChannelFuture sendFileFuture = ctx.write(new HttpChunkedInput(new ChunkedFile(raf, 0, fileLength, 8192)), ctx.newProgressivePromise());
+    sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
+        @Override
+        public void operationProgressed(ChannelProgressiveFuture future, long progress, long total) {
+            if (total < 0) {
+                System.err.println(future.channel() + " Transfer progress: " + progress);
+            } else {
+                System.err.println(future.channel() + " Transfer progress: " + progress + " / " + total);
             }
         }
+
+        @Override
+        public void operationComplete(ChannelProgressiveFuture future) {
+            System.err.println(future.channel() + " Transfer complete.");
+        }
+    });
+    ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+    if (!HttpUtil.isKeepAlive(request)) {
+        lastContentFuture.addListener(ChannelFutureListener.CLOSE);
+    }
+}
 
         private static void setContentTypeHeader(FullHttpResponse response, File file) {
     String fileName = file.getName().toLowerCase();
@@ -750,6 +767,14 @@ public class Main {
         mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     } else if (fileName.endsWith(".xlsx")) {
         mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    } else if (fileName.endsWith(".mp4")) { 
+        mimeType = "video/mp4";
+    } else if (fileName.endsWith(".webm")) {
+        mimeType = "video/webm";
+    } else if (fileName.endsWith(".ogg")) {
+        mimeType = "video/ogg";
+    } else if (fileName.endsWith(".mov")) {
+        mimeType = "video/quicktime";
     } else {
         try {
             mimeType = java.nio.file.Files.probeContentType(file.toPath());

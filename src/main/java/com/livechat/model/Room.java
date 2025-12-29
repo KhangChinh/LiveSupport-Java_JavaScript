@@ -8,6 +8,7 @@ public class Room {
     private int ticketID;
     private String lastMessage;
     private Timestamp lastMessageTime;
+    private int ticketStatusID;
 
     // Getters and Setters
     public int getRoomID() {
@@ -48,5 +49,13 @@ public class Room {
 
     public void setLastMessageTime(Timestamp lastMessageTime) {
         this.lastMessageTime = lastMessageTime;
+    }
+    
+    public int getTicketStatusID() {
+        return ticketStatusID;
+    }
+
+    public void setTicketStatusID(int ticketStatusID) {
+        this.ticketStatusID = ticketStatusID;
     }
 }
