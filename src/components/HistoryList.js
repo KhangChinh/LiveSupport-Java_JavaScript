@@ -14,11 +14,11 @@ const HistoryList = ({ selectedRoomId, onSelectRoom }) => {
 
   useEffect(() => {
     getMyRooms({ search, sort, page, limit }, (receivedRooms) => {
-      console.log("Received rooms from server:", receivedRooms); 
+      console.log("Received rooms from server:", receivedRooms);
       setRooms(receivedRooms);
     });
     getMyRoomsCount({ search }, (count) => {
-      console.log("Received room count:", count); 
+      console.log("Received room count:", count);
       setTotal(count);
     });
   }, [search, sort, page]);
@@ -44,7 +44,7 @@ const HistoryList = ({ selectedRoomId, onSelectRoom }) => {
 
       <div className="history-list__controls">
         <div className="search-wrapper">
-          <FiSearch className="search-icon" />
+
           <input
             type="text"
             className="search-input"
@@ -74,9 +74,8 @@ const HistoryList = ({ selectedRoomId, onSelectRoom }) => {
             {rooms.map((room) => (
               <li
                 key={room.roomID}
-                className={`room-item ${
-                  room.roomID === selectedRoomId ? "active" : ""
-                }`}
+                className={`room-item ${room.roomID === selectedRoomId ? "active" : ""
+                  }`}
                 onClick={() => onSelectRoom(room.roomID)}
               >
                 <div className="room-info">
@@ -91,11 +90,11 @@ const HistoryList = ({ selectedRoomId, onSelectRoom }) => {
                 <div className="room-time">
                   {room.lastMessageTime
                     ? new Date(room.lastMessageTime).toLocaleString("vi-VN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        day: "2-digit",
-                        month: "2-digit",
-                      })
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      day: "2-digit",
+                      month: "2-digit",
+                    })
                     : "—"}
                 </div>
               </li>

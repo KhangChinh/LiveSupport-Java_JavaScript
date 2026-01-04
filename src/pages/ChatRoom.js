@@ -60,26 +60,26 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
 
   useEffect(() => {
     if (!roomId) {
-        navigate("/history");
-        return;
+      navigate("/history");
+      return;
     }
 
     console.log("Fetching room info for", roomId);
     getRoomById(
-        { roomID: roomId },
-        {
-            success: (room) => {
-                setRoomName(room.roomName);
-                setTicketID(room.ticketID);
-                setIsCompleted(room.ticketStatusID === 4);
-            },
-            error: (msg) => {
-                enqueueSnackbar(msg, { variant: "error" });
-                navigate("/history"); 
-            },
-        }
+      { roomID: roomId },
+      {
+        success: (room) => {
+          setRoomName(room.roomName);
+          setTicketID(room.ticketID);
+          setIsCompleted(room.ticketStatusID === 4);
+        },
+        error: (msg) => {
+          enqueueSnackbar(msg, { variant: "error" });
+          navigate("/history");
+        },
+      }
     );
-    
+
     joinRoom(
       { roomID: roomId },
       {
@@ -206,7 +206,7 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
 
   const handleSend = () => {
     if (!message.trim() && !file) return;
-    
+
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -323,16 +323,13 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
             </>
           )}
 
-          {user.roleID === 3 && !isCompleted && (
+          {user.roleID === 2 && !isCompleted && (
             <>
               <button
                 className="transfer-button"
                 onClick={() => setTransferOpen(true)}
               >
                 Chuyển tiếp
-              </button>
-              <button className="end-button" onClick={() => setEndOpen(true)}>
-                Kết thúc
               </button>
             </>
           )}
@@ -384,7 +381,8 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
                           </div>
                         </div>
                       ) : (
-                        <div className="file-attachment">
+                        <div className="file-attachment"
+                          style={{ color: "#60cf24ff" }}>
                           <span className="file-icon">{getFileIcon(ext)}</span>
                           <span className="file-name">{msg.fileName}</span>
                           <div
@@ -402,9 +400,9 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
                 <span className="message-time">
                   {msg.sentAt && !isNaN(new Date(msg.sentAt).getTime())
                     ? new Date(msg.sentAt).toLocaleTimeString("vi-VN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : "—"}
                 </span>
               </div>
@@ -456,7 +454,8 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
 
       {transferOpen && (
         <div className="modal-overlay" onClick={() => setTransferOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '20px' }}>
             <div className="modal-header">
               <h5>Chuyển tiếp ticket</h5>
               <button className="close-btn" onClick={() => setTransferOpen(false)}>
@@ -505,7 +504,8 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setTransferOpen(false)}>
+              <button className="btn btn-secondary" onClick={() => setTransferOpen(false)}
+                style={{ backgroundColor: "red" }}>
                 Hủy
               </button>
             </div>
@@ -515,7 +515,8 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
 
       {endOpen && (
         <div className="modal-overlay" onClick={() => setEndOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '20px' }}>
             <div className="modal-header">
               <h5>Kết thúc ticket</h5>
               <button className="close-btn" onClick={() => setEndOpen(false)}>
@@ -547,13 +548,15 @@ const ChatRoom = ({ onBack, showBackButton = false }) => {
               />
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setEndOpen(false)}>
+              <button className="btn btn-secondary" onClick={() => setEndOpen(false)}
+                style={{ backgroundColor: "red", marginRight: '10px' }}>
                 Hủy
               </button>
               <button
                 className="btn btn-danger"
                 onClick={handleEnd}
                 disabled={ratingPoint < 1 || ratingPoint > 5}
+                style={{ backgroundColor: "#349302ff" }}
               >
                 Kết thúc ticket
               </button>
